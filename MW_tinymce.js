@@ -95,9 +95,16 @@
 	
 	// set up language url if language not 'en'
 	if ( tinyMCELanguage !== 'en' ) {
-	  tinyMCELangURL = mw_extensionAssetsPath + '/TinyMCE/tinymce/langs/' +
-		  tinyMCELanguage + '.js';
+		tinyMCELanguage = tinyMCELanguage.replace(/^([^-]*)(-)([^-]*)$/i, function( match, $1, $2, $3 ) {
+			// tinymce expects '-' to be '_' and part after '_' to be upper case
+			
+			if ( $2 == '-' ) $2 = '_';
+			return $1 + $2 + $3.toUpperCase;
+		});
+		tinyMCELangURL = mw_extensionAssetsPath + '/TinyMCE/tinymce/langs/' +
+			tinyMCELanguage + '.js';
 	};
+
 	//get the local language name of the 'file' namespace
 	mw_fileNamespace = 'file';
 	for (var key in mw_namespaces ) {
@@ -223,7 +230,7 @@ var defaultSettings = function(selector) {
 				mw_scriptPath + mw_skin_css,
 				mw_scriptPath + mw_shared_css,
 				mw_extensionAssetsPath + '/TinyMCE/MW_tinymce.css',
-//				mw_extensionAssetsPath + '/TinyMCE/custom_plugins/fontawesome/fontawesome/css/font-awesome.min.css',
+				mw_extensionAssetsPath + '/TinyMCE/custom_plugins/fontawesome/plugins/fontawesome/css/font-awesome.min.css',
 				mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.wrapper.css',
 				mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.generated.css',
 //				'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/css/bootstrap.css',
@@ -241,7 +248,7 @@ var defaultSettings = function(selector) {
 //DC TODO autoresize is broken - it just endlessly extends the editor window?
 //			'autoresize': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/autoresize/plugin.js',
 			'autosave': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/autosave/plugin.js',
-			'charmap': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/charmap/plugin.js',
+//			'charmap': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/charmap/plugin.js',
 			'insertdatetime': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/insertdatetime/plugin.js',
 //			'image': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/image/plugin.js',
 //			'link': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/link/plugin.js',
@@ -254,15 +261,16 @@ var defaultSettings = function(selector) {
 			'searchreplace': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/searchreplace/plugin.js',
 			'template': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/template/plugin.js',
 //			'visualblocks': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualblocks/plugin.js',
-			'visualchars': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualchars/plugin.js',
+//			'visualchars': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualchars/plugin.js',
 // DC TODO fix fontawesome for TMCE v 5
-//			'fontawesome': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/fontawesome/plugins/fontawesome/plugin.js',
+			'fontawesome': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/fontawesome/plugins/fontawesome/plugin.js',
 //			'wikicode': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikicode/plugin.js',
 			'wikipaste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js',
 			'wikitable': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitable/plugin.js',
 			'wikilink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikilink/plugin.js',
 			'wikiparser': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiparser/plugin.js',
 			'wikitext': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitext/plugin.js',
+			'wikitoggle': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitoggle/plugin.js',
 			'wikiupload': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiupload/plugin.js',
 //			'wslink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/wikibase/plugins/ws_link/plugin.js',
 		},
@@ -274,7 +282,7 @@ var defaultSettings = function(selector) {
 		// single new lines: set non_rendering_newline_character to false if you don't use non-rendering single new lines in wiki
 		wiki_non_rendering_newline_character: '&#120083', // was &para;
 		// set the page title
-		wiki_page_title: mw_canonical_namespace + ':' + mw_title,
+		wiki_page_mwtPageTitle: mw_canonical_namespace + ':' + mw_title,
 		// set the path to the wiki api
 		wiki_api_path: mw_scriptPath + '/api.php',
 		// set the valid wiki namespaces
@@ -406,7 +414,7 @@ var defaultSettings = function(selector) {
 //DC  TODO fix fontawesome for TinyMCE v5
 		toolbar_sticky: true,
 //		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | charmap fontawesome singlelinebreak wikilink unlink table wikiupload wikimagic wikisourcecode | formatselect styleselect removeformat | searchreplace ',
-		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist advlist outdent indent | charmap singlelinebreak wikilink wikiunlink table image media wikiupload wikimagic wikisourcecode wikitext| styleselect template removeformat visualchars visualblocks| searchreplace wslink ',
+		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist advlist outdent indent | fontawesome charmap singlelinebreak wikilink wikiunlink table image media wikiupload wikimagic wikisourcecode wikitext| styleselect template removeformat wikitoggle visualchars visualblocks| searchreplace wslink ',
 		style_formats_merge: true,
 		style_formats: [
 			{
@@ -479,7 +487,6 @@ var updateSettings = function(tinyMCESelector, settings) {
 	$.each(settings, function (k, v) {
 		defaultSet[k] = v;
 	});
-debugger;
 	return defaultSet;
 };
 
