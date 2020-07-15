@@ -15,7 +15,7 @@
 // set in LocalSettings.php do not override the settings in
 // extension.json. For simplicity's sake, don't load extensions unless we're
 // at version 1.27 or higher.
-if ( version_compare( $GLOBALS['wgVersion'], '1.27c', '>' ) ) {
+if ( version_compare( $GLOBALS['wgVersion'], '1.31', '>' ) ) {
 	if ( function_exists( 'wfLoadExtension' ) ) {
 		wfLoadExtension( 'TinyMCE' );
 		// Keep i18n globals so mergeMessageFileList.php doesn't break
@@ -34,7 +34,7 @@ if ( defined( 'TINYMCE_VERSION' ) ) {
 	return 1;
 }
 
-define( 'TINYMCE_VERSION', '0.5' );
+define( 'TINYMCE_VERSION', '1.0' );
 
 $GLOBALS['wgExtensionCredits']['hook'][] = array(
 	'path' => __FILE__,
@@ -68,7 +68,7 @@ $GLOBALS['wgTinyMCEIP'] = dirname( __FILE__ );
 //$GLOBALS['wgHooks']['ResourceLoaderRegisterModules'][] = 'TinyMCEHooks::registerModules';
 $GLOBALS['wgHooks']['MakeGlobalVariablesScript'][] = 'TinyMCEHooks::setGlobalJSVariables';
 $GLOBALS['wgHooks']['MagicWordwgVariableIDs'][] = 'TinyMCEHooks::addMagicWordVariableIDs';
-$GLOBALS['wgHooks']['ParserBeforeTidy'][] = 'TinyMCEHooks::handleMagicWords';
+$GLOBALS['wgHooks']['ParserAfterTidy'][] = 'TinyMCEHooks::handleMagicWords';
 $GLOBALS['wgHooks']['SkinTemplateNavigation'][] = 'TinyMCEAction::displayTab';
 $GLOBALS['wgHooks']['SkinEditSectionLinks'][] = 'TinyMCEHooks::addEditSectionLink';
 if ( class_exists( 'MediaWiki\Linker\LinkRenderer' ) ) {
@@ -88,10 +88,10 @@ $GLOBALS['wgHooks']['OutputPageBeforeHTML'][] = 'TinyMCEHooks::addToViewPage';
 
 $GLOBALS['wgAutoloadClasses']['TinyMCEHooks'] = __DIR__ . '/TinyMCE.hooks.php';
 $GLOBALS['wgAutoloadClasses']['TinyMCEAction'] = __DIR__ . '/TinyMCEAction.php';
-$GLOBALS['wgAutoloadClasses']['TinyMCEUploadForm'] = __DIR__ . '/upload/TinyMCEUploadForm.php';
-$GLOBALS['wgAutoloadClasses']['TinyMCEUploadSourceField'] = __DIR__ . '/upload/TinyMCEUploadSourceField.php';
-$GLOBALS['wgAutoloadClasses']['TinyMCEUploadWindow'] = __DIR__ . '/upload/TinyMCEUploadWindow.php';
-$GLOBALS['wgSpecialPages']['TinyMCEUploadWindow'] = 'TinyMCEUploadWindow';
+#$GLOBALS['wgAutoloadClasses']['TinyMCEUploadForm'] = __DIR__ . '/upload/TinyMCEUploadForm.php';
+#$GLOBALS['wgAutoloadClasses']['TinyMCEUploadSourceField'] = __DIR__ . '/upload/TinyMCEUploadSourceField.php';
+#$GLOBALS['wgAutoloadClasses']['TinyMCEUploadWindow'] = __DIR__ . '/upload/TinyMCEUploadWindow.php';
+#$GLOBALS['wgSpecialPages']['TinyMCEUploadWindow'] = 'TinyMCEUploadWindow';
 
 $GLOBALS['wgActions']['tinymceedit'] = 'TinyMCEAction';
 
@@ -175,6 +175,7 @@ $GLOBALS['wgResourceModules'] += array(
 			'tinymce-upload-alert-correct-and-try-again',
 			'tinymce-upload-alert-destination-filename-needed',
 			'tinymce-upload-alert-source-or-destination-undefined',
+			'tinymce-upload-alert-file-source-empty',
 			'tinymce-upload-confirm-file-already-exists',
 			'tinymce-upload-confirm-file-not-on-wiki',
 			'tinymce-upload-confirm-ignore-warnings',
@@ -215,6 +216,7 @@ $GLOBALS['wgResourceModules'] += array(
 			'tinymce-link-context-menu',
 			'tinymce-link',
 			'tinymce-insert-linebreak',
+			'tinymce-toggle-button-toggle-wiki-placeholders'
 		)
 	),
 	'ext.tinymce.core' => $wgTinyMCEResourceTemplate + array(
@@ -244,4 +246,4 @@ $GLOBALS['wgTinyMCEPreservedTags'] = array();
 $GLOBALS['wgTinyMCEDisabledNamespaces'] = array( NS_MEDIAWIKI, NS_TEMPLATE );
 $GLOBALS['wgTinyMCEUnhandledStrings'] = array();
 $GLOBALS['wgTinyMCELoadOnView'] = false;
-//$GLOBALS['wgTinyMCESettings'] = array();
+$GLOBALS['wgTinyMCESettings'] = array();

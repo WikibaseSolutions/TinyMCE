@@ -19,7 +19,7 @@ class TinyMCEHooks {
 			return 1;
 		}
 
-		define( 'TINYMCE_VERSION', '0.5' );
+		define( 'TINYMCE_VERSION', '1.0' );
 
 		$GLOBALS['wgTinyMCEIP'] = dirname( __DIR__ ) . '/../';
 
@@ -123,7 +123,7 @@ class TinyMCEHooks {
 
 		foreach ( $tinyMCELanguages as $tinyMCELang ) {
 			if ( $mwLang === strtolower( $tinyMCELang ) ||
-				$mwLang === substr( $tinyMCELang, 0, 2 ) ) {
+			     $mwLang === substr( $tinyMCELang, 0, 2 ) ) {
 				return $tinyMCELang;
 			}
 		}
@@ -138,7 +138,7 @@ class TinyMCEHooks {
 			}
 			foreach ( $tinyMCELanguages as $tinyMCELang ) {
 				if ( $fallbackLang === strtolower( $tinyMCELang ) ||
-					$fallbackLang === substr( $tinyMCELang, 0, 2 ) ) {
+				     $fallbackLang === substr( $tinyMCELang, 0, 2 ) ) {
 					return $tinyMCELang;
 				}
 			}
@@ -148,7 +148,7 @@ class TinyMCEHooks {
 	}
 
 	static function setGlobalJSVariables( &$vars, $out ) {
-		global $wgTinyMCEEnabled, $wgTinyMCETemplates, $wgTinyMCEPreservedTags;
+		global $wgTinyMCEEnabled, $wgTinyMCEMacros, $wgTinyMCEPreservedTags;
 		global $wgCheckFileExtensions, $wgStrictFileExtensions;
 		global $wgFileExtensions, $wgFileBlacklist;
 		global $wgEnableUploads;
@@ -177,9 +177,9 @@ class TinyMCEHooks {
 
 		$tinyMCETagList = $specialTags . implode( '|', $defaultTags );
 		$tinyMCEPreservedTagList = $preservedTags . implode( '|', $wgTinyMCEPreservedTags);
-/*		if ( $wgTinyMCEPreservedTags  ) {
-			$tinyMCETagList = $tinyMCETagList . '|' . implode( '|', $wgTinyMCEPreservedTags );
-		}*/
+		/*		if ( $wgTinyMCEPreservedTags  ) {
+					$tinyMCETagList = $tinyMCETagList . '|' . implode( '|', $wgTinyMCEPreservedTags );
+				}*/
 
 		$vars['wgTinyMCETagList'] = $tinyMCETagList;
 		$vars['wgTinyMCEPreservedTagList'] = $tinyMCEPreservedTagList;
@@ -217,41 +217,31 @@ class TinyMCEHooks {
 			$userIsBlocked = false;
 		}
 		$vars['wgTinyMCEUserIsBlocked'] = $userIsBlocked ;
-        $vars['wgTinyMCESettings'] = $wgTinyMCESettings;
-        $vars['wgWsTinyMCEModals'] = $wgWsTinyMCEModals;
+ 		$vars['wgTinyMCESettings'] = $wgTinyMCESettings;
+		$vars['wgWsTinyMCEModals'] = $wgWsTinyMCEModals;
 
-		$jsTemplateArray = array();
-		foreach ( $wgTinyMCETemplates as $template ) {
-			if ( !array_key_exists( 'title', $template ) ) {
+		$jsMacroArray = array();
+		foreach ( $wgTinyMCEMacros as $macro ) {
+			if ( !array_key_exists( 'name', $macro ) || !array_key_exists( 'text', $macro ) ) {
 				continue;
 			}
 
-			$description = null;
-			if ( array_key_exists( 'description', $template ) ) {
-				$description = $template['description'];
-			}
-
-			if ( array_key_exists( 'url', $template ) ) {
-				if ( strtolower( substr( $template['url'], 0, 4 ) ) === 'http' ) {
-					$contentURL = $template['url'];
+			$imageURL = null;
+			if ( array_key_exists( 'image', $macro ) ) {
+				if ( strtolower( substr( $macro['image'], 0, 4 ) ) === 'http' ) {
+					$imageURL = $macro['image'];
 				} else {
-					$contentFile = wfLocalFile( $template['url'] );
-					$contentURL = $contentFile->getURL();
+					$imageFile = wfLocalFile( $macro['image'] );
+					$imageURL = $imageFile->getURL();
 				}
-				$jsTemplateArray[] = array(
-					'title' => $template['title'],
-					'description' => $template['description'],
-					'url' => $contentURL,
-				);
-			} else if ( array_key_exists( 'content', $template ) ) {
-				$jsTemplateArray[] = array(
-					'title' => $template['title'],
-					'description' => $template['description'],
-					'content' => $template['content'] 
-				);
 			}
+			$jsMacroArray[] = array(
+				'name' => $macro['name'],
+				'image' => $imageURL,
+				'text' => htmlentities( $macro['text'] )
+			);
 		}
-		$vars['wgTinyMCETemplates'] = $jsTemplateArray;
+		$vars['wgTinyMCEMacros'] = $jsMacroArray;
 
 		return true;
 	}
@@ -279,6 +269,25 @@ class TinyMCEHooks {
 		if ( $magicWord->matchAndRemove( $text ) ) {
 			$parser->mOutput->setProperty( 'notinymce', 'y' );
 		}
+		return true;
+	}
+
+	/**
+	 * If a talk page does not exist, modify the red link to it to point
+	 * to "action=tinymceedit". Uses the hook SkinTemplateTabAction.
+	 */
+	public static function modifyTalkPageLink( &$sktemplate, $title, $message, $selected, $checkEdit, &$classes, &$query, &$text, &$result ) {
+		if ( !$checkEdit ) {
+			return true;
+		}
+
+		$context = $sktemplate->getContext();
+		if ( !TinyMCEHooks::enableTinyMCE( $title, $context ) ) {
+			return true;
+		}
+
+		$query = str_replace( 'action=edit', 'action=tinymceedit', $query );
+
 		return true;
 	}
 
@@ -462,7 +471,7 @@ class TinyMCEHooks {
 
 		global $wgTinyMCELoadOnView;
 		if ( Action::getActionName( $context ) === 'view') {
-		    return (bool)$wgTinyMCELoadOnView;
+			return (bool)$wgTinyMCELoadOnView;
 		}
 
 		return true;
@@ -524,7 +533,7 @@ class TinyMCEHooks {
 	 *
 	 * @param OutputPage $output
 	 * @return void
-	*/
+	 */
 	public static function addToViewPage( OutputPage &$output ) {
 		$context = $output->getContext();
 		$action = Action::getActionName( $context );
@@ -540,7 +549,7 @@ class TinyMCEHooks {
 			$GLOBALS['wgTinyMCEEnabled'] = false;
 		}
 	}
-	
+
 	public static function addPreference( $user, &$preferences ) {
 		$preferences['tinymce-use'] = array(
 			'type' => 'toggle',

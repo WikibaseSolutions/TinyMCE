@@ -1,144 +1,245 @@
-var mw_server = 'https://' + mw.config.get( 'wgServer' ) + '/';
-var mw_scriptPath = mw.config.get( 'wgScriptPath' );
-var mw_extensionAssetsPath = mw.config.get( 'wgExtensionAssetsPath' );
-var mw_namespaces = mw.config.get( 'wgNamespaceIds' );
-var mw_url_protocols = mw.config.get( 'wgUrlProtocols' );
-var mw_canonical_namespace = mw.config.get( "wgCanonicalNamespace" );
-var mw_title = mw.config.get( "wgTitle" );
-var tinyMCETemplates = mw.config.get( 'wgTinyMCETemplates' ) || [];
-var tinyMCETagList = mw.config.get( 'wgTinyMCETagList' );
-var tinyMCEPreservedTagList = mw.config.get( 'wgTinyMCEPreservedTagList' );
-var tinyMCELanguage = mw.config.get( 'wgTinyMCELanguage' );
-var tinyMCEDirectionality = mw.config.get( 'wgTinyMCEDirectionality' );
-var tinyMCESettings = mw.config.get( 'wgTinyMCESettings' );
-var tinyMCELangURL = null;
-var mw_skin = mw.config.get( 'skin' );
-var mw_skin_css = '/load.php?debug=false&lang=en-gb&modules=mediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.sectionAnchor%7Cmediawiki.skinning.interface%7Cskins.' + mw_skin + '.styles&only=styles&skin=' + mw_skin ;
-var mw_shared_css = '/resources/src/mediawiki.legacy/shared.css' ;
-var	mw_htmlInvariants = [ //these tags have no wiki code equivalents so don't need converting
-//DC TODO make sure TinyMCE set up to process all these tags itself otherwise you'll
-//need to add them back into mw_htmlPairsStatic or mw_htmlSingle. below
-	'abbr', 'b', 'bdi', 'bdo',
-	'caption', 'center', 'cite',// 'code',
-	'data', 'del', 'dfn',
-	'ins', 'kbd', 'mark', 'p', 'q',
-	'rb', 'rp', 'rt', 'rtc', 'ruby',
-	's',  'strike', //'span',
-	'time', 'tt', 'u',
-	'link', 'meta', 'var', 'wbr',
-];
-var	mw_htmlPairsStatic = [ //now just non-nestable
-	/*	'abbr', 'b', 'bdi', 'big', 'blockquote',
-        'caption', 'center', 'cite', 'code',
-        'data', 'dd', 'del',  'dfn', 'div', 'dl', 'dt', 'em', 'font',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'i', 'ins', 'kbd', 'li', 'mark',  'ol', 'p', 'pre',
-        'ruby', 'rb', 'rp', 'rt', 'rtc',
-        's', 'samp','small', 'span', 'strike', 'strong', 'sub', 'sup',
-        'table', 'time', 'tt', 'u', 'ul', 'var', */
-//	'abbr',
-	'b',
-//	'bdi', 
-//	'caption', 'center', 'cite',
-	'code', // although code is a wiki invariant html tag treat as static pair so contained wiki code correctly parsed
-//	'data', 'del',  'dfn',  
-	'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-	'i',
-//  'ins', 'mark',
-	'p', // 'pre',
-//	'rb', 'rp', 'rt', 'rtc',
-//	's', 'strike', 
-//	'time', 'tt', 'u', 
-];
-var	mw_htmlBlockPairsStatic = [
-	'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-//	'img', 
-	'ol', 'ul', 'li',
-//    'p', 'pre', 
-	'p',
-	'blockquote',
-	'dl','dd','dt',
-	'div',
-	'hr',
-	'source',
-	'table',
-];
-var mw_htmlSingle = [
-	//'br', //don't render properly if process as a preserved tag!
-	'dd', 'dt', 'hr', 'li',
-//  'link', 'meta', 'wbr',
-];
-var mw_htmlSingleOnly = [
-	'br', 'hr', 'link', 'meta', 'wbr',
-];
-var mw_htmlNestable = [
-	'bdo', 'big',
-	'blockquote',
-	'dd', 'div', 'dl', 'dt', 'em', 'font',
-	'kbd', 'li', 'ol', 'q', 'ruby',
-	'samp', 'small', 'span', 'strong', 'sub', 'sup',
-	'table', 'td', 'th', 'tr', 'ul', 'var',
-];
-var mw_htmlInsideTable = [
-	'td', 'th', 'tr',
-];
-var mw_htmlList = [
-	'ol', 'ul',
-];
-var mw_htmlInsideList = [
-	'li',
-];
-// the following tags have wiki equivalents, so if they occur in 
-// the wiki text we will want to preserve them so they don't get 
-// replaced by their wiki equivalent
-var mw_preserveHtml = [
-	'ol', 'ul', 'li',
-	'dd', 'dt', 'dl',
-]
-var mw_preservedTagsList = mw_htmlPairsStatic.concat(mw_htmlSingleOnly, mw_htmlNestable, mw_htmlInvariants).join("|") + "|" + tinyMCETagList;
+	var editor = tinymce.activeEditor
+	var mw_server = 'https://' + mw.config.get( 'wgServer' ) + '/';
+	var mw_scriptPath = mw.config.get( 'wgScriptPath' );
+	var mw_extensionAssetsPath = mw.config.get( 'wgExtensionAssetsPath' );
+	var mw_namespaces = mw.config.get( 'wgNamespaceIds' );
+	var mw_url_protocols = mw.config.get( 'wgUrlProtocols' );
+	var mw_canonical_namespace = mw.config.get( "wgCanonicalNamespace" ); 
+	var mw_title = mw.config.get( "wgTitle" );
+	var tinyMCETemplates = mw.config.get( 'wgTinyMCETemplates' );
+	var tinyMCETagList = mw.config.get( 'wgTinyMCETagList' );
+	var tinyMCEPreservedTagList = mw.config.get( 'wgTinyMCEPreservedTagList' );
+	var tinyMCELanguage = mw.config.get( 'wgTinyMCELanguage' );
+	var tinyMCEDirectionality = mw.config.get( 'wgTinyMCEDirectionality' );
+	var tinyMCESettings = mw.config.get( 'wgTinyMCESettings' );
+	var tinyMCELangURL = null;
+	var mw_skin = mw.config.get( 'skin' );
+	var mw_skin_css = '/load.php?debug=false&lang=en-gb&modules=mediawiki.legacy.commonPrint%2Cshared%7Cmediawiki.sectionAnchor%7Cmediawiki.skinning.interface%7Cskins.' + mw_skin + '.styles&only=styles&skin=' + mw_skin ;
+	var mw_shared_css = '/resources/src/mediawiki.legacy/shared.css' ;
+	var	mw_htmlInvariants = [ //these tags have no wiki code equivalents so don't need converting
+	//DC TODO make sure TinyMCE set up to process all these tags itself otherwise you'll
+	//need to add them back into mw_htmlPairsStatic or mw_htmlSingle. below
+	  'abbr', 'b', 'bdi', 'bdo', 
+	  'caption', 'center', 'cite',// 'code',
+	  'data', 'del', 'dfn',  
+	  'ins', 'kbd', 'mark', 'p', 'q',
+	  'rb', 'rp', 'rt', 'rtc', 'ruby',
+	  's',  'strike', //'span',
+	  'time', 'tt', 'u', 
+	  'link', 'meta', 'var', 'wbr',
+	];
+	var	mw_htmlPairsStatic = [ //now just non-nestable
+		'a',
+	//	'abbr',
+	  'b',
+	//	'bdi', 
+	//	'caption', 'center', 'cite',
+	  'code', // although code is a wiki invariant html tag treat as static pair so contained wiki code correctly parsed
+	//	'data', 'del',  'dfn',  
+		'img', 
+	  'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 
+	  'i',
+	//  'ins', 'mark',
+	  'p', // 'pre',
+	//	'rb', 'rp', 'rt', 'rtc',
+	//	's', 'strike', 
+	//	'time', 'tt', 'u', 
+	];
+	var	mw_htmlBlockPairsStatic = [
+		'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+		'ol', 'ul', 'li',
+//		p', 'pre', 
+		'p',
+		'blockquote',
+		'dl','dd','dt',
+		'div',
+		'hr',
+		'source',
+		'table', 
+	];
+	var mw_htmlSingle = [
+	  //'br', //don't render properly if process as a preserved tag!
+	  'dd', 'dt', 'hr', 'li',
+	//  'link', 'meta', 'wbr',
+	];
+	var mw_htmlSingleOnly = [
+	  'br', 'hr', 'link', 'meta', 'wbr',
+	];
+	var mw_htmlNestable = [
+	  'bdo', 'big', 
+	  'blockquote', 
+	  'dd', 'div', 'dl', 'dt', 'em', 'font',
+	  'kbd', 'li', 'ol', 'q', 'ruby', 
+	  'samp', 'small', 'span', 'strong', 'sub', 'sup',
+	  'table', 'td', 'th', 'tr', 'ul', 'var', 'tbody',
+	];
+	var mw_htmlInsideTable = [
+	  'td', 'th', 'tr',
+	];
+	var mw_htmlList = [
+	  'ol', 'ul', 
+	];
+	var mw_htmlInsideList = [
+	  'li',
+	];
+	var mw_preservedTagsList = mw_htmlPairsStatic.concat(mw_htmlSingleOnly, mw_htmlNestable, mw_htmlInvariants).join("|") + "|" + tinyMCETagList; 
+	
+	//set up other mw related constants
+	
+	// set up language url if language not 'en'
+	if ( tinyMCELanguage !== 'en' ) {
+		tinyMCELanguage = tinyMCELanguage.replace(/^([^-]*)(-)([^-]*)$/i, function( match, $1, $2, $3 ) {
+			// tinymce expects '-' to be '_' and part after '_' to be upper case
+			
+			if ( $2 == '-' ) $2 = '_';
+			return $1 + $2 + $3.toUpperCase;
+		});
+		tinyMCELangURL = mw_extensionAssetsPath + '/TinyMCE/tinymce/langs/' +
+			tinyMCELanguage + '.js';
+	};
 
-//set up other mw related constants
+	//get the local language name of the 'file' namespace
+	mw_fileNamespace = 'file';
+	for (var key in mw_namespaces ) {
+	  if ( mw_namespaces[key] == 6 ) {
+		  mw_fileNamespace = key;
+	  }
+	};
 
-// set up language url if language not 'en'
-if ( tinyMCELanguage !== 'en' ) {
-	tinyMCELangURL = mw_extensionAssetsPath + '/TinyMCE/tinymce/langs/' +
-		tinyMCELanguage + '.js';
-};
-//get the local language name of the 'file' namespace
-mw_fileNamespace = 'file';
-for (var key in mw_namespaces ) {
-	if ( mw_namespaces[key] == 6 ) {
-		mw_fileNamespace = key;
-	}
-};
+
+	var setContent = function ( editor, content, args ) {
+		// sets the content of the editor window
+		editor.focus();
+		editor.undoManager.transact( function () {
+			editor.setContent( content, args );
+		});
+		editor.selection.setCursorLocation();
+		editor.nodeChanged();
+	};
+
+	var setSelection = function ( editor, content, args ) {
+		// sets the content of the selection.  If nothing is selected
+		// it will insert content at the cursor.  If the selection is
+		// contained in non-editable elements, the whole of the top
+		// level non-editable element is replaced with the content
+		editor.focus();
+		var nonEditableParents = editor.dom.getParents( editor.selection.getNode(),function ( aNode ) {
+			if (aNode.contentEditable === 'false') {
+				return aNode
+			}
+		});
+		if (nonEditableParents) {
+			editor.selection.select ( nonEditableParents[ nonEditableParents.length - 1 ] );
+		}
+		editor.undoManager.transact ( function () {
+			editor.selection.setContent ( content, args );
+		});
+		editor.selection.setCursorLocation ();
+		editor.nodeChanged ();
+	};
+
+	var getContent = function ( editor, args ) {
+		return editor.getContent( args );
+	};
+
+	var getSelection = function ( editor, args ) {
+		return editor.selection.getContent( args );
+	};
+
+	var htmlDecode = function ( value ) {
+		return $("<textarea/>").html( value ).text();
+	};
+	
+	var  htmlEncode = function (value) {
+		return $('<textarea/>').text(value).html();
+	};
+	
+	var  createUniqueNumber = function() {
+		return Math.floor( ( Math.random() * 100000000 ) + Date.now());
+	};
+	
+/*	var onDblClickLaunch = function ( editor, aTarget, aClass, aCommand) {	
+		var selectedNodeParents = editor.dom.getParents( aTarget, function ( aNode ) {
+			if ( aNode.className.indexOf( aClass ) > -1 ) {
+				return aNode;
+			} else {
+				return;
+			}
+		});
+
+		if (selectedNodeParents.length > 0 ) {
+			editor.selection.select( selectedNodeParents[ selectedNodeParents.length - 1 ]);
+			editor.execCommand( aCommand );
+			return true;
+		}
+		return false;	
+	}*/
+
+	var toggleEnabledState = function( editor, selectors ) {
+		// function to toggle a button's enabled state dependend
+		// on which nodes are selected in the editor
+		return function (api) {
+			editor.on('NodeChange', function (e) {
+				var selectedNode = e.element;
+				api.setDisabled(true);
+				while (selectedNode.parentNode != null) {
+					if (typeof selectedNode.className != "undefined") {
+						for (var selector in selectors) {
+							if (selectedNode.className.indexOf( selectors[ selector ]) > -1) {
+								editor.selection.select(selectedNode);
+								editor.off('NodeChange', true);
+								return api.setDisabled(false)
+							}
+						}
+					}
+					selectedNode = selectedNode.parentNode;
+				}
+			});
+//			return editor.off('NodeChange', true);
+		};
+	};
+
+	var utility = {
+		setContent: setContent,
+		setSelection: setSelection,
+		getContent: getContent,
+		getSelection: getSelection,
+		htmlDecode: htmlDecode,
+		htmlEncode: htmlEncode,
+		createUniqueNumber: createUniqueNumber,
+//		onDblClickLaunch: onDblClickLaunch,
+		toggleEnabledState: toggleEnabledState
+	};
 
 var defaultSettings = function(selector) {
 	return {
 		selector: selector,
 		base_url: mw_extensionAssetsPath + '/TinyMCE/tinymce',
-		theme_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/themes/silver/theme.js',
+		theme_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/themes/silver/theme.min.js',
 		skin_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/skins/ui/oxide',
+		icons_url: mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiparser/icons/icons.js',
+		icons: 'mwt',
+		language_url: tinyMCELangURL,
+		language: tinyMCELanguage,
+  		wiki_utility: utility,
 		content_css:
 			[
 				mw_scriptPath + mw_skin_css,
 				mw_scriptPath + mw_shared_css,
 				mw_extensionAssetsPath + '/TinyMCE/MW_tinymce.css',
-//				mw_extensionAssetsPath + '/TinyMCE/custom_plugins/fontawesome/fontawesome/css/font-awesome.min.css',
-			mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.wrapper.css',
-			mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.generated.css',
-			'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/css/bootstrap.css',
-			'https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css',
-			mw_extensionAssetsPath + '/TinyMCE/custom_plugins/wikibase/plugins/ws_link/plugin.css'
-		],
-		language_url: tinyMCELangURL,
-		language: tinyMCELanguage,
+				mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.wrapper.css',
+				mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.generated.css',
+			],
 		external_plugins: {
+			// load 'wikiutiilities' first as it is used in other plugins
+//			'wikiutiilities': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiutilities/plugin.js',
+			'advlist': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/advlist/plugin.js',
 			'anchor': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/anchor/plugin.js',
 			'autolink': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/autolink/plugin.js',
 //DC TODO autoresize is broken - it just endlessly extends the editor window?
 //			'autoresize': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/autoresize/plugin.js',
 			'autosave': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/autosave/plugin.js',
-			'charmap': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/charmap/plugin.js',
+//			'charmap': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/charmap/plugin.js',
 			'insertdatetime': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/insertdatetime/plugin.js',
 //			'image': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/image/plugin.js',
 //			'link': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/link/plugin.js',
@@ -153,22 +254,25 @@ var defaultSettings = function(selector) {
 //			'visualblocks': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualblocks/plugin.js',
 //			'visualchars': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualchars/plugin.js',
 // DC TODO fix fontawesome for TMCE v 5
-//			'fontawesome': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/fontawesome/plugins/fontawesome/plugin.js',
-			'paste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_paste/plugin.js',
-			'table': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_table/plugin.js',
-			'wspaste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/wikibase/plugins/ws_paste/plugin.js',
-			'wikicode': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikicode/plugin.js',
-			'wslink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/wikibase/plugins/ws_link/plugin.js',
-			// 'wslink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/wikibase/ws_link/plugin.js', // duncan
-			'wikiupload': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_upload/plugin.js',
+//			'wikicode': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikicode/plugin.js',
+			'wikipaste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js',
+			'wikitable': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitable/plugin.js',
+			'wikilink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikilink/plugin.js',
+			'wikiparser': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiparser/plugin.js',
+			'wikitext': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitext/plugin.js',
+			'wikitoggle': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitoggle/plugin.js',
+			'wikiupload': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiupload/plugin.js',
+//			'wslink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/wikibase/plugins/ws_link/plugin.js',
 		},
 		//
 		// *** tinymce configuration ***
 		//
 		// ** mediawiki related settings**
 		//
+		// single new lines: set non_rendering_newline_character to false if you don't use non-rendering single new lines in wiki
+		wiki_non_rendering_newline_character: '&#120083', // was &para;
 		// set the page title
-		wiki_page_title: mw_canonical_namespace + ':' + mw_title,
+		wiki_page_mwtPageTitle: mw_canonical_namespace + ':' + mw_title,
 		// set the path to the wiki api
 		wiki_api_path: mw_scriptPath + '/api.php',
 		// set the valid wiki namespaces
@@ -189,7 +293,7 @@ var defaultSettings = function(selector) {
 //		wiki_preserved_tags_list: mw_htmlPairsStatic.concat(mw_htmlSingleOnly, mw_htmlNestable).join("|") + tinyMCETagList,
 		wiki_block_tags: mw_htmlBlockPairsStatic.join("|"),
 		wiki_invariant_tags: mw_htmlInvariants.join("|"),
-		wiki_preserved_html_tags: mw_preserveHtml.join("|"),
+//		wiki_preserved_html_tags: mw_preserveHtml.join("|"),
 		//
 		// ** TinyMCE editor settings **
 		//
@@ -198,7 +302,7 @@ var defaultSettings = function(selector) {
 		// identified and edited in the TinyMCE editore window
 		//
 		// single new lines: set non_rendering_newline_character to false if you don't use non-rendering single new lines in wiki
-		wiki_non_rendering_newline_character: '&#120083', // was &para;
+/*		wiki_non_rendering_newline_character: '&#120083', // was &para;
 		// comments: set non_rendering_comment_character to false if you don't use non-rendering comments in wiki
 		wiki_non_rendering_comment_character: '&#8493',
 		// <nowiki /> tags: set non_rendering_nowiki_character to false if you don't use non-rendering nowiki tag in wiki
@@ -212,25 +316,25 @@ var defaultSettings = function(selector) {
 		wiki_non_rendering_img_character: '&#8464',
 		// non-rendering parser output: this is used so the parsed element can be edited in the editor.
 		// set non_rendering_parser_output_character to false if you don't use non-rendering parser output placeholder in wiki
-		wiki_non_rendering_parser_output_character: '&#120090',
+		wiki_non_rendering_parser_output_character: '&#120090',*/
 		//
 //0525		valid_elements: mw_preservedTagsList,
 		branding: false,
 //		relative_urls: false,
 //		remove_script_host: false,
 //		document_base_url: server,
-		tinyMCETemplates: tinyMCETemplates,
+//		tinyMCETemplates: tinyMCETemplates,
 		automatic_uploads: true,
 		paste_data_images: true,
 //0525		paste_enable_default_filters: false,
 		paste_word_valid_elements: 'b,strong,i,em,h1,h2,h3,h4,h5,table,tr,th,td,ol,ul,li,a,sub,sup,strike,br,del,div,p',
-		invalid_elements: 'tbody,thead,tfoot,colgroup,col',
+//0603		invalid_elements: 'tbody,thead,tfoot,colgroup,col',
 		browser_spellcheck: true,
 		allow_html_in_named_anchor: true,
 		visual: false,
 		wikimagic_context_toolbar: true,
 		browsercontextmenu_context_toolbar: true,
-		contextmenu: "undo redo | cut copy paste insert | link wikimagic inserttable | styleselect removeformat | browsercontextmenu",
+		contextmenu: "undo redo | cut copy paste insert | link wikimagic table | styleselect removeformat | browsercontextmenu",
 		convert_fonts_to_spans: true,
 		link_title: false,
 		link_assume_external_targets: true,
@@ -241,13 +345,13 @@ var defaultSettings = function(selector) {
 		target_list: false,
 //		visual_table_class : "wikitable",
 		visual_table_class: " ",
-		/*		table_default_attributes: {
-                    class: 'wikitable'
-                },*/
-		height: 400,
+/*		table_default_attributes: {
+			class: 'wikitable'
+		},*/
+		height: 500,
 		autoresize_max_height: 600,
-		code_dialog_width: 1200,
-		code_dialog_height: 500,
+//		code_dialog_width: 1200,
+//		code_dialog_height: 500,
 		statusbar: false,
 		// the default text direction for the editor
 		directionality: tinyMCEDirectionality,
@@ -263,6 +367,7 @@ var defaultSettings = function(selector) {
 		forced_root_block_attrs: {
 			'class': 'mwt-paragraph'
 		},
+//		end_container_on_empty_block: true,
 		remove_trailing_brs: false,
 		// indentation depth
 		// keep current style on pressing return
@@ -300,7 +405,7 @@ var defaultSettings = function(selector) {
 //DC  TODO fix fontawesome for TinyMCE v5
 		toolbar_sticky: true,
 //		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | charmap fontawesome singlelinebreak wikilink unlink table wikiupload wikimagic wikisourcecode | formatselect styleselect removeformat | searchreplace ',
-		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | charmap singlelinebreak link wikilink unlink table image media wikiupload wikimagic wikisourcecode | styleselect template removeformat visualchars visualblocks| searchreplace wslink ',
+		toolbar: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist advlist outdent indent | charmap singlelinebreak wikilink wikiunlink table image media wikiupload wikimagic wikisourcecode wikitext| styleselect template removeformat wikitoggle visualchars visualblocks| searchreplace wslink',
 		style_formats_merge: true,
 		style_formats: [
 			{
@@ -323,9 +428,18 @@ var defaultSettings = function(selector) {
 			{title: "Pre", block: "pre", classes: "mw_pre_from_space"},
 			{title: "Paragraph", block: "p"}
 		],
+		formats: {
+			// Changes the default format for h1 to have a class of mwt-heading
+			h1: { block: 'h1', classes: 'mwt-heading' },
+			h2: { block: 'h2', classes: 'mwt-heading' },
+			h3: { block: 'h3', classes: 'mwt-heading' },
+			h4: { block: 'h4', classes: 'mwt-heading' },
+			h5: { block: 'h5', classes: 'mwt-heading' },
+			h6: { block: 'h6', classes: 'mwt-heading' }
+		},
 		block_formats: 'Paragraph=p;Heading 1=h1;Heading 2=h2;Heading 3=h3;Heading 4=h4;Heading 5=h5;Heading 6=h6;Preformatted=pre;Code=code',
 		images_upload_credentials: true,
-		autoresize_max_height: 400,
+//		autoresize_max_height: 400,
 		template_selected_content_classes: "selectedcontent",
 		setup: function (editor) {
 		},
@@ -371,11 +485,70 @@ window.mwTinyMCEInit = function( tinyMCESelector, settings = {} ) {
 var updateSettings = function(tinyMCESelector, settings) {
 	var defaultSet = defaultSettings(tinyMCESelector);
 	$.each(settings, function (k, v) {
-		defaultSet[k] = v;
+		if ( k.endsWith( '+' ) ) {
+			// adding to default parameter
+			k = k.slice( 0, - 1 );
+			if ($.type( defaultSet[k] ) === "string") {
+				defaultSet[k] = defaultSet[k] + v;
+			} else if (Array.isArray ( defaultSet[k] ) ) {
+				defaultSet[k] = defaultSet[k].concat( v );
+			} else if ( Object.keys( defaultSet[k]).length > 0 ) {
+				$.extend( defaultSet[k], v );
+			}
+		} else if ( k.endsWith( '-' ) ) {
+debugger;
+			// removing from default parameter
+			k = k.slice( 0, - 1 );
+			if ($.type( defaultSet[k] ) === "string") {
+				// if default value is a string remove the value from it
+				var str = defaultSet[k],
+					regex,
+					matcher;
+				regex = '\\s*' + v + '\\s*';
+				matcher = new RegExp(regex, 'gm');
+				str = str.replace(matcher, ' ');
+				defaultSet[k] = str;
+			} else if (Array.isArray ( defaultSet[k] ) ) {
+				// if default value is an array remove the element with
+				// key == value from it
+				var i = 0,
+					arr = defaultSet[k];
+				while (i < arr.length) {
+					if (arr[i] === v) {
+						arr.splice(i, 1);
+    				} else {
+     					++i;
+    				}
+				}
+				defaultSet[k] = arr;
+			} else if ( Object.keys( defaultSet[k] ).length > 0 ) {
+				// if default value is an object remove the element with
+				// key == value from it
+				var obj = defaultSet[k];
+				$.each( v, function ( key, val ) {
+					if ( obj[ key ] == val ) {
+						delete obj[ key ];
+					}
+				});
+				defaultSet[k] = obj;
+			} else if ( v == '' ) {
+				// if the value is blank remove the key from the default values 
+				// key == value from it
+				var obj = defaultSet;
+//				$.each( v, function ( key, val ) {
+					if ( obj[ k ]) {
+						delete obj[ k ];
+					}
+//				});
+				defaultSet = obj;
+			}
+		} else {
+			//replacing default parameter
+			defaultSet[k] = v;
+		}
 	});
 	return defaultSet;
 };
-
 
 $.each(tinyMCESettings, function (selector, settings) {
 	mwTinyMCEInit(selector, settings);
