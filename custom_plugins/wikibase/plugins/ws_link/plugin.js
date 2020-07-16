@@ -72,16 +72,16 @@ var Ws_Link = function(editor) {
          * @type {any[]}
          * @private
          */
-        _tags4Html = new Array(),
+        _tags4Html = {},
         /**
          * all the wiki tags
          * @type {any[]}
          * @private
          */
-        _tags4Wiki = new Array(),
-        _tags4Replace = new Array(),
-        _tags4Template = new Array(),
-        _idsArray = new Array();
+        _tags4Wiki = {},
+        _tags4Replace = {},
+        _tags4Template = {},
+        _idsArray = [];
     // make sure api.parse is loaded
     if ( typeof api.parse !== "function" ) {
         $.getScript('/resources/src/mediawiki/api/parse.js').done(function () {
@@ -330,7 +330,7 @@ var Ws_Link = function(editor) {
                 {
                     type: 'submit',
                     name: 'submitButton',
-                    text: 'OK',
+                    text: 'Akkoord',
                     primary: true
                 }],
             initialData: initialData,
@@ -509,6 +509,10 @@ var Ws_Link = function(editor) {
 
         // preserve the wiki text and html in arrays for later substitution
         // for the relevant placeholder
+        console.log({
+            _tags4Html: _tags4Html,
+            _tags4Wiki: _tags4Wiki
+        });
         _tags4Wiki[id] = tagWikiText;
         _tags4Html[id] = tagOuterHTML;
 
@@ -982,6 +986,10 @@ var Ws_Link = function(editor) {
                 }
             });
 
+            var idsString = _idsArray.join('');
+            var res = _recoverTags2html(idsString);
+
+
             $.each(_idsArray, function (i, id) {
                 data.text = data.text.replace(_tags4Template[id], _tags4Replace[id]);
             });
@@ -999,7 +1007,7 @@ var Ws_Link = function(editor) {
 
         _tags4Wiki[id] = templateCall;
         _tags4Html[id] = 'toParse';
-        _tags4Html[id] = _recoverTags2html(id);
+        // _tags4Html[id] = _recoverTags2html(id);
         return id;
     }
 
