@@ -61,9 +61,11 @@ var WsRvsNotitie = function(editor) {
             } else {
                 if ( type === 'interne tekst' ) {
                     // filter out p tags
-                    if ( $(sel).length > 0 ) {
-                        var $sel = $(sel);
+                    let temp = $(`<div>${sel}</div>`);
+                    if ( temp ) {
+                        var $sel = $(temp);
                         $($sel).each(function(i, el) {
+                            console.log(el);
                             if ( $(el).is('p') ) {
                                 $(el).replaceWith(function (e) {
                                     return this.innerHTML;
@@ -74,7 +76,7 @@ var WsRvsNotitie = function(editor) {
                             sel: sel,
                             $sel: $sel
                         })
-                        sel = $sel.html();
+                        sel = $sel[0].innerHTML;
                     }
                 }
             }
