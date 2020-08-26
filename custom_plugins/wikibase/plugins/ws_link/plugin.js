@@ -166,7 +166,7 @@ var Ws_Link = function(editor) {
         if ( editParams) {
             templateCall = `{{${name}|${editParams}}}`;
         }
-
+        console.log(templateCall);
         var editTemplate = name.slice(name.indexOf(':') + 1);
         // render the template
         var dialogApi = editor.windowManager.open(buildDialogSpec(`${text} invoegen`,[], {
@@ -175,6 +175,7 @@ var Ws_Link = function(editor) {
         dialogApi.block('Loading...');
 
         api.parse(templateCall, {}).done(function(data) {
+            console.log(data);
             var content = getPreviewContent(data);
             $(content).find('script[src*="WSForm.general.js"]').remove();
             var bodyItems = [
@@ -905,6 +906,12 @@ var Ws_Link = function(editor) {
             editTemplate = 'Template:' + $(selectNode).data('mwt-edittemplate'),
             title = $(selectNode).data('mwt-type');
 
+        console.log({
+            selectNode: selectNode,
+            editTemplate: editTemplate,
+            title: title
+        })
+
         openDialog(editTemplate, title, title, $(selectNode).data('mwt-editparams'));
     }
 
@@ -999,7 +1006,7 @@ var Ws_Link = function(editor) {
     }
 
     function _createPlaceholderForTemplateCall() {
-        return `#${_createUniqueNumber()}#`;
+        return `$${_createUniqueNumber()}$`;
     }
 
     function _replaceTextIntoHtmlElement(templateCall, tagClass, editTemplate) {
@@ -1043,12 +1050,12 @@ var Ws_Link = function(editor) {
     }
 
     this.init = function (ed, url) {
-        _slb = (ed.getParam("wiki_non_rendering_newline_character")) ?
-            _markupFormat.format(
-                "mwt-singleLinebreak",
-                mw.msg( 'tinymce-wikicode-non-rendering-single-linebreak' ),
-                ed.getParam("wiki_non_rendering_newline_character") )
-            : null;
+        _slb = (editor.getParam("wiki_non_rendering_newline_character")) ?
+            '<span class="mceNonEditablePlaceHolder mwt-singleLinebreak" title="' +
+            mw.msg('tinymce-wikicode-non-rendering-single-linebreak' ) +
+            '" dragable="true" contenteditable="false">' +
+            editor.getParam("wiki_non_rendering_newline_character") +
+            '</span>' : null;
         ed.on('beforeSetContent', _onBeforeSetContent);
         // ed.on('getContent', _onGetContent);
         ed.on('dblclick', _onDblclick);
