@@ -1,0 +1,81 @@
+/**
+ * Copyright (c) Aoxomoxoa Limited, Inc. All rights reserved.
+ * Licensed under the LGPL.
+ * For LGPL see License.txt in the project root for license information.
+ *
+ * mw_wikinonbreaking plugin
+ *
+ * Version: 1.0 (2020-08-01)
+ *
+ */
+(function () {
+	'use strict';
+
+	var pluginManager = tinymce.util.Tools.resolve('tinymce.PluginManager');
+
+	var	editor = tinymce.activeEditor;
+
+	var utility = editor.getParam("wiki_utility");
+
+	var setSelection = utility.setSelection;
+
+	var translate = utility.translate;
+
+	var insertNbsp = function (editor, times) {
+
+		var args = {format: 'wiki', load: 'true', convert2html: true};
+  
+		setSelection( editor, '&nbsp;', args );
+
+    };
+
+	var registerCommands = function (editor) {
+		editor.addCommand('mwt-nonBreaking', function () {
+			insertNbsp(editor, 1);
+		});
+	};
+
+	var registerButtons = function (editor) {
+		editor.ui.registry.addButton('nonbreaking', {
+			icon: 'non-breaking',
+			tooltip: translate( 'tinymce-nonbreaking-insertNonBreakingSpace' ),
+			onAction: function () {
+				return editor.execCommand('mwt-nonBreaking');
+			}
+		});
+		editor.ui.registry.addMenuItem('nonbreaking', {
+			icon: 'non-breaking',
+			text: translate( 'tinymce-nonbreaking-inserNonBreakingSpace' ),
+			onAction: function () {
+				return editor.execCommand('mwt-nonBreaking');
+			}
+		});
+	};
+
+    var setup = function (editor) {
+		editor.on('keydown', function (evt) {
+			if ( evt.keyCode == 32 ) {
+				var html,
+					args,
+					element,
+					outerHTML;
+				if (( evt.ctrlKey == true ) && ( evt.shiftKey == true )) {
+					editor.execCommand('mwt-nonBreaking');
+				}
+				return true;
+			}
+		});
+    };
+
+
+    function Plugin () {
+		pluginManager.add('wikinonbreaking', function (editor) {
+			registerCommands( editor );
+			registerButtons( editor );
+			setup( editor );
+		});
+	}
+
+    Plugin();
+
+}());

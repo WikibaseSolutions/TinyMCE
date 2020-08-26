@@ -188,6 +188,7 @@ tinymce.addI18n('nl',{
 "Could not find the specified string.": "Geen resultaten gevonden",
 "Match case": "Identieke hoofd\/kleine letters",
 "Find whole words only": "Alleen hele woorden zoeken",
+"Find in selection": "In selectie zoeken",
 "Spell check": "Spellingscontrole",
 "Ignore": "Negeren",
 "Ignore all": "Alles negeren",

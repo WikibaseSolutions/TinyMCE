@@ -1,6 +1,7 @@
 	var editor = tinymce.activeEditor
 	var mw_server = 'https://' + mw.config.get( 'wgServer' ) + '/';
 	var mw_scriptPath = mw.config.get( 'wgScriptPath' );
+	var	mw_api = mw_scriptPath + '/api.php';
 	var mw_extensionAssetsPath = mw.config.get( 'wgExtensionAssetsPath' );
 	var mw_namespaces = mw.config.get( 'wgNamespaceIds' );
 	var mw_url_protocols = mw.config.get( 'wgUrlProtocols' );
@@ -20,7 +21,7 @@
 	//DC TODO make sure TinyMCE set up to process all these tags itself otherwise you'll
 	//need to add them back into mw_htmlPairsStatic or mw_htmlSingle. below
 	  'abbr', 'b', 'bdi', 'bdo', 
-	  'caption', 'center', 'cite',// 'code',
+	  'caption', 'center', 'reference',// 'code',
 	  'data', 'del', 'dfn',  
 	  'ins', 'kbd', 'mark', 'p', 'q',
 	  'rb', 'rp', 'rt', 'rtc', 'ruby',
@@ -54,7 +55,7 @@
 		'dl','dd','dt',
 		'div',
 		'hr',
-		'source',
+//		'source',
 		'table', 
 	];
 	var mw_htmlSingle = [
@@ -122,20 +123,29 @@
 		// it will insert content at the cursor.  If the selection is
 		// contained in non-editable elements, the whole of the top
 		// level non-editable element is replaced with the content
+		var nonEditableParents = [],
+			bm;
+
 		editor.focus();
-		var nonEditableParents = editor.dom.getParents( editor.selection.getNode(),function ( aNode ) {
-			if (aNode.contentEditable === 'false') {
+		nonEditableParents = editor.dom.getParents( editor.selection.getNode(),function ( aNode ) {
+			if ( aNode.contentEditable === 'false' ) {
 				return aNode
 			}
 		});
-		if (nonEditableParents) {
+
+		if ( nonEditableParents.length > 0 ) {
 			editor.selection.select ( nonEditableParents[ nonEditableParents.length - 1 ] );
 		}
+
 		editor.undoManager.transact ( function () {
 			editor.selection.setContent ( content, args );
 		});
-		editor.selection.setCursorLocation ();
-		editor.nodeChanged ();
+
+		editor.nodeChanged();
+
+		bm = editor.selection.getBookmark();
+
+		editor.selection.moveToBookmark( bm )
 	};
 
 	var getContent = function ( editor, args ) {
@@ -147,17 +157,23 @@
 	};
 
 	var htmlDecode = function ( value ) {
-		return $("<textarea/>").html( value ).text();
+//		return $("<textarea/>").html( value ).text();
+		return tinymce.DOM.decode( value );
 	};
 	
 	var  htmlEncode = function (value) {
-		return $('<textarea/>').text(value).html();
+//		return $('<textarea/>').text(value).html();
+		return tinymce.DOM.encode( value );
 	};
 	
 	var  createUniqueNumber = function() {
 		return Math.floor( ( Math.random() * 100000000 ) + Date.now());
 	};
 	
+	var translate = function( message ) {
+		return mw.msg( message )
+	};
+
 /*	var onDblClickLaunch = function ( editor, aTarget, aClass, aCommand) {	
 		var selectedNodeParents = editor.dom.getParents( aTarget, function ( aNode ) {
 			if ( aNode.className.indexOf( aClass ) > -1 ) {
@@ -175,29 +191,151 @@
 		return false;	
 	}*/
 
-	var toggleEnabledState = function( editor, selectors ) {
+	var toggleEnabledState = function( editor, selectors, on ) {
 		// function to toggle a button's enabled state dependend
 		// on which nodes are selected in the editor
+		// if 'on' = true then the button is toggled on when the
+		// given selectors are true otherwise it's toggled off
 		return function (api) {
 			editor.on('NodeChange', function (e) {
-				var selectedNode = e.element;
-				api.setDisabled(true);
-				while (selectedNode.parentNode != null) {
+				var selectedNode = e.element,
+					parents;
+//debugger;
+//				api.setDisabled(true);
+				api.setDisabled( on );
+				
+				for (var selector in selectors) {
+					if (selectedNode.className.indexOf( selectors[ selector ]) > -1) {
+//						editor.selection.select(selectedNode);
+						editor.off('NodeChange', true);
+						return api.setDisabled( !on );						
+					}
+				}
+
+				parents = $( selectedNode ).parents( selectors.join(",") );
+
+				if (parents.length > 0 ) {
+					editor.off('NodeChange', !on );
+					return api.setDisabled(false);						
+				}
+				
+/*				while (selectedNode.parentNode != null) {
 					if (typeof selectedNode.className != "undefined") {
 						for (var selector in selectors) {
 							if (selectedNode.className.indexOf( selectors[ selector ]) > -1) {
 								editor.selection.select(selectedNode);
 								editor.off('NodeChange', true);
-								return api.setDisabled(false)
+								return api.setDisabled(false);						
 							}
 						}
 					}
 					selectedNode = selectedNode.parentNode;
-				}
+				}*/
 			});
 //			return editor.off('NodeChange', true);
 		};
 	};
+
+	var doUpload = function(fileType, fileToUpload, fileName, fileSummary, ignoreWarnings){
+		var uploadData = new FormData(),
+			uploadDetails;
+
+		uploadData.append("action", "upload");
+		uploadData.append("filename", fileName);
+		uploadData.append("text", fileSummary);
+		uploadData.append("token", mw.user.tokens.get( 'csrfToken' ) );
+		uploadData.append("ignorewarnings", ignoreWarnings );
+		if (fileType == 'File') uploadData.append("file", fileToUpload);
+		if (fileType == 'URL') uploadData.append("url", fileToUpload);
+		uploadData.append("format", 'json');
+		
+		//as we now have created the data to send, we send it...
+		$.ajax( { //http://stackoverflow.com/questions/6974684/how-to-send-formdata-objects-with-ajax-requests-in-jquery
+			url: mw_api,
+			contentType: false,
+			processData: false,
+			type: 'POST',
+			async: false,
+			data: uploadData,//the formdata object we created above
+			success: function(data){
+					uploadDetails = data;
+			},
+			error:function(xhr,status, error){
+				uploadDetails['responseText'] = xhr.responseText;
+				console.log(error);
+			}
+		});
+
+		return uploadDetails;
+	}
+
+	var checkUploadDetail = function (editor, uploadDetails, ignoreWarnings, uploadName) {
+		var message,
+			result = [];
+debugger;
+		if (typeof uploadDetails == "undefined") {
+			message = mw.msg("tinymce-upload-alert-unknown-error-uploading",
+				uploadName );
+			result = false;
+		} else if (typeof uploadDetails.responseText != "undefined") {
+			message = mw.msg("tinymce-upload-alert-error-uploading",uploadDetails.responseText);
+			editor.windowManager.alert(message);
+			result = false;
+		} else if (typeof uploadDetails.error != "undefined") {
+			message = mw.msg("tinymce-upload-alert-error-uploading",uploadDetails.error.info);
+			// if the error is because the file exists then we can ignore and
+			// use the existing file
+			if (uploadDetails.error.code == "fileexists-no-change") {
+				result = 'exists';
+			} else {
+				result = false;
+				editor.windowManager.alert(message);
+			}
+		} else if (typeof uploadDetails.upload.warnings != "undefined" && (!ignoreWarnings)) {
+			message = mw.msg("tinymce-upload-alert-warnings-encountered", uploadName) + "\n\n" ;
+			result = 'warning';
+			for (warning in uploadDetails.upload.warnings) {
+				warningDetails = uploadDetails.upload.warnings[warning];
+				if (warning == 'badfilename') {
+					message = message + "	" + mw.msg("tinymce-upload-alert-destination-filename-not-allowed") + "\n";
+					editor.windowManager.alert(message);
+					result = false;
+				} else if (warning == 'exists') {
+//					message = message + "	" + mw.msg("tinymce-upload-alert-destination-filename-already-exists") + "\n";
+					editor.windowManager.confirm(mw.msg("tinymce-upload-confirm-file-already-exists", uploadName),
+						function(ok) {
+							if (ok) {
+								result = 'exists';
+							} else {
+								result = false;
+							}
+						});
+				} else if (warning == 'duplicate') {
+//					duplicate = warningDetails[ 0 ];
+					editor.windowManager.confirm(mw.msg("tinymce-upload-confirm-file-is-duplicate", uploadName, warningDetails[ 0 ]),
+						function(ok) {
+							if (ok) {
+								result = warningDetails[ 0 ];
+							} else {
+								result = false;
+							}
+						});
+/*					message = message + "	" + mw.msg("tinymce-upload-alert-duplicate-file",warningDetails[ 0 ]) + "\n"
+					result = 'duplicate';*/
+				} else {
+					message = message + "	" + mw.msg("tinymce-upload-alert-other-warning",warning) + "\n"
+					editor.windowManager.alert(message);
+					result = false;
+				}
+			}
+//			editor.windowManager.alert(message);
+		} else if (typeof uploadDetails.upload.imageinfo != "undefined") {
+//			result = uploadDetails.upload.imageinfo.url;
+			result["url"] = uploadDetails.upload.imageinfo.url;
+			result["page"] = uploadDetails.upload.imageinfo.canonicaltitle;
+		}
+		return result;
+	}
 
 	var utility = {
 		setContent: setContent,
@@ -208,7 +346,10 @@
 		htmlEncode: htmlEncode,
 		createUniqueNumber: createUniqueNumber,
 //		onDblClickLaunch: onDblClickLaunch,
-		toggleEnabledState: toggleEnabledState
+		toggleEnabledState: toggleEnabledState,
+		translate: translate,
+		doUpload: doUpload,
+		checkUploadDetail: checkUploadDetail
 	};
 
 var defaultSettings = function(selector) {
@@ -218,6 +359,8 @@ var defaultSettings = function(selector) {
 		theme_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/themes/silver/theme.min.js',
 		skin_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/skins/ui/oxide',
 		icons_url: mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiparser/icons/icons.js',
+//		mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikireference/icons/icons.js',
+//		icons_url: mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikireference/icons/icons.js',
 		icons: 'mwt',
 		language_url: tinyMCELangURL,
 		language: tinyMCELanguage,
@@ -253,12 +396,13 @@ var defaultSettings = function(selector) {
 			'template': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/template/plugin.js',
 //			'visualblocks': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualblocks/plugin.js',
 //			'visualchars': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/visualchars/plugin.js',
-// DC TODO fix fontawesome for TMCE v 5
-//			'wikicode': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikicode/plugin.js',
-			'wikipaste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js',
-			'wikitable': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitable/plugin.js',
 			'wikilink': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikilink/plugin.js',
+ 			'wikinonbreaking': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikinonbreaking/plugin.js',
+ 			'wikinonrenderinglinebreak': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikinonrenderinglinebreak/plugin.js',
 			'wikiparser': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiparser/plugin.js',
+			'wikipaste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js',
+			'wikireference': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikireference/plugin.js',
+			'wikitable': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitable/plugin.js',
 			'wikitext': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitext/plugin.js',
 			'wikitoggle': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitoggle/plugin.js',
 			'wikiupload': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiupload/plugin.js',
@@ -274,7 +418,7 @@ var defaultSettings = function(selector) {
 		// set the page title
 		wiki_page_mwtPageTitle: mw_canonical_namespace + ':' + mw_title,
 		// set the path to the wiki api
-		wiki_api_path: mw_scriptPath + '/api.php',
+		wiki_api_path: mw_api,
 		// set the valid wiki namespaces
 		wiki_namespaces: mw_namespaces,
 		// set the local name of the 'file' namespace
@@ -302,36 +446,22 @@ var defaultSettings = function(selector) {
 		// identified and edited in the TinyMCE editore window
 		//
 		// single new lines: set non_rendering_newline_character to false if you don't use non-rendering single new lines in wiki
-/*		wiki_non_rendering_newline_character: '&#120083', // was &para;
-		// comments: set non_rendering_comment_character to false if you don't use non-rendering comments in wiki
-		wiki_non_rendering_comment_character: '&#8493',
-		// <nowiki /> tags: set non_rendering_nowiki_character to false if you don't use non-rendering nowiki tag in wiki
-		wiki_non_rendering_nowiki_character: '&#120081',
-		// <br /> tags: set rendering_br_character to false if you don't use rendering br tag in wiki
-		wiki_rendering_br_character: '&#8492',
-		// Images are frequntly displayed on the page in a location separate from where the markup appears within the wiki
-		// markup so the following character is used to located the non-rendering image in the editor window.  The image is
-		// also disdplayed, in the editor window where one would expect
-		// Elements containing <img> tags: set non-rendering_img_character to false if you don't use non-rendering img tag in wiki
-		wiki_non_rendering_img_character: '&#8464',
-		// non-rendering parser output: this is used so the parsed element can be edited in the editor.
-		// set non_rendering_parser_output_character to false if you don't use non-rendering parser output placeholder in wiki
-		wiki_non_rendering_parser_output_character: '&#120090',*/
-		//
-//0525		valid_elements: mw_preservedTagsList,
+		showPlaceholders: false,
+//		showPlaceholders: true,
 		branding: false,
 //		relative_urls: false,
 //		remove_script_host: false,
 //		document_base_url: server,
 //		tinyMCETemplates: tinyMCETemplates,
+//		entity_encoding: 'raw',
 		automatic_uploads: true,
 		paste_data_images: true,
-//0525		paste_enable_default_filters: false,
 		paste_word_valid_elements: 'b,strong,i,em,h1,h2,h3,h4,h5,table,tr,th,td,ol,ul,li,a,sub,sup,strike,br,del,div,p',
-//0603		invalid_elements: 'tbody,thead,tfoot,colgroup,col',
+		paste_webkit_styles: "none",
 		browser_spellcheck: true,
 		allow_html_in_named_anchor: true,
 		visual: false,
+		nonbreaking_wrap: false,
 		wikimagic_context_toolbar: true,
 		browsercontextmenu_context_toolbar: true,
 		contextmenu: "undo redo | cut copy paste insert | link wikimagic table | styleselect removeformat | browsercontextmenu",
@@ -339,8 +469,8 @@ var defaultSettings = function(selector) {
 		link_title: false,
 		link_assume_external_targets: true,
 		link_class_list: [
-			{title: 'External', value: 'mceNonEditable mwt-wikiMagic mwt-externallink'},
-			{title: 'Internal', value: 'mceNonEditable mwt-wikiMagic mwt-internallink'},
+			{title: 'External', value: 'mwt-nonEditable mwt-wikiMagic mwt-externallink'},
+			{title: 'Internal', value: 'mwt-nonEditable mwt-wikiMagic mwt-internallink'},
 		],
 		target_list: false,
 //		visual_table_class : "wikitable",
@@ -375,8 +505,8 @@ var defaultSettings = function(selector) {
 		// save plugin
 		save_enablewhendirty: true,
 		// Allow style tags in body and unordered lists in spans (inline)
-		valid_children: "+span[ul],+span[div]",
-//		extended_valid_elements: "nowiki",
+		valid_children: "+span[ul],+span[div],+em[div],+big[div],+small[div],+p[div]",
+		extended_valid_elements: "big,small",
 //	    custom_elements: "~nowiki",
 //		closed: /^(br|hr|input|meta|img|link|param|area|nowiki)$/,
 //		valid_children: "+*[*]",
@@ -402,11 +532,10 @@ var defaultSettings = function(selector) {
 		noneditable_noneditable_class: 'fa',
 		extended_valid_elements: 'span[*]',
 		// tinymce configuration
-//DC  TODO fix fontawesome for TinyMCE v5
 		toolbar_sticky: true,
 //		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | charmap fontawesome singlelinebreak wikilink unlink table wikiupload wikimagic wikisourcecode | formatselect styleselect removeformat | searchreplace ',
-		toolbar: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist advlist outdent indent | charmap singlelinebreak wikilink wikiunlink table image media wikiupload wikimagic wikisourcecode wikitext| styleselect template removeformat wikitoggle visualchars visualblocks| searchreplace wslink',
-		style_formats_merge: true,
+		toolbar: 'undo redo | cut copy paste insert selectall| bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist advlist outdent indent | wikilink wikiunlink table image media | formatselect removeformat| visualchars visualblocks| searchreplace | wikimagic wikisourcecode wikitext wikiupload | wikitoggle nonbreaking singlelinebreak reference template',
+		//style_formats_merge: true,
 		style_formats: [
 			{
 				title: "Table", items: [
@@ -430,12 +559,12 @@ var defaultSettings = function(selector) {
 		],
 		formats: {
 			// Changes the default format for h1 to have a class of mwt-heading
-			h1: { block: 'h1', classes: 'mwt-heading' },
-			h2: { block: 'h2', classes: 'mwt-heading' },
-			h3: { block: 'h3', classes: 'mwt-heading' },
-			h4: { block: 'h4', classes: 'mwt-heading' },
-			h5: { block: 'h5', classes: 'mwt-heading' },
-			h6: { block: 'h6', classes: 'mwt-heading' }
+			h1: { block: 'h1', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
+			h2: { block: 'h2', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
+			h3: { block: 'h3', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
+			h4: { block: 'h4', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
+			h5: { block: 'h5', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
+			h6: { block: 'h6', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
 		},
 		block_formats: 'Paragraph=p;Heading 1=h1;Heading 2=h2;Heading 3=h3;Heading 4=h4;Heading 5=h5;Heading 6=h6;Preformatted=pre;Code=code',
 		images_upload_credentials: true,
@@ -477,18 +606,21 @@ var defaultSettings = function(selector) {
 	};
 };
 
-window.mwTinyMCEInit = function( tinyMCESelector, settings = {} ) {
-	var customSettings = updateSettings(tinyMCESelector, settings);
-	window.tinymce.init(customSettings);
+var mwTinyMCEInit = function( tinyMCESelector, settings ) {
+	var customSettings = updateSettings( tinyMCESelector, settings );
+	window.tinymce.init( customSettings );
 };
 
-var updateSettings = function(tinyMCESelector, settings) {
+var updateSettings = function( tinyMCESelector, settings ) {
 	var defaultSet = defaultSettings(tinyMCESelector);
 	$.each(settings, function (k, v) {
 		if ( k.endsWith( '+' ) ) {
+
 			// adding to default parameter
 			k = k.slice( 0, - 1 );
-			if ($.type( defaultSet[k] ) === "string") {
+			if ( defaultSet[k] === undefined ) {
+				defaultSet[k] = v;
+			} else if ($.type( defaultSet[k] ) === "string") {
 				defaultSet[k] = defaultSet[k] + v;
 			} else if (Array.isArray ( defaultSet[k] ) ) {
 				defaultSet[k] = defaultSet[k].concat( v );
@@ -496,10 +628,11 @@ var updateSettings = function(tinyMCESelector, settings) {
 				$.extend( defaultSet[k], v );
 			}
 		} else if ( k.endsWith( '-' ) ) {
-debugger;
 			// removing from default parameter
 			k = k.slice( 0, - 1 );
-			if ($.type( defaultSet[k] ) === "string") {
+			if ( defaultSet[k] === undefined ) {
+				// do nothing
+			} else if ($.type( defaultSet[k] ) === "string") {
 				// if default value is a string remove the value from it
 				var str = defaultSet[k],
 					regex,
@@ -553,6 +686,8 @@ debugger;
 $.each(tinyMCESettings, function (selector, settings) {
 	mwTinyMCEInit(selector, settings);
 });
+
+
 // mwTinyMCEInit( '.tinymce, #wpTextbox1' );
 
 // Let others know we're done here

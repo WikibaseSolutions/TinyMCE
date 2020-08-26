@@ -16,6 +16,10 @@ tinymce.PluginManager.add('wikiupload', function(editor) {
 	
 	var setSelection = utility.setSelection;
 	
+	var doUpload = utility.doUpload;
+
+	var checkUploadDetail = utility.checkUploadDetail;
+
 	var me = this,
 		_srccontent,
 		_userThumbsize = 3,
@@ -32,50 +36,43 @@ tinymce.PluginManager.add('wikiupload', function(editor) {
 		 * Function for checking this user wiki upoload permissions this wiki
 		 * @type String
 		 */
-//		_mwtCheckUploadPermissions = editor.getParam("check_upload_permissions");
-_mwtCheckUploadPermissions = function( editor ) {
-		// function to check what upload permissions this user has
-		// it will provide an alert if certain permissions aren't granted
-		// and returns a value saying what permiossions the user has
-		var permissions = [];
-			
-		// start by assuming nothing is allowed
-		permissions['userMayUpload'] = false;
-		permissions['userMayUploadFromURL'] = false;
-		permissions['uploadsAllowed'] =  false;
-
-		if (mw.config.get( 'wgTinyMCEUserMayUpload' )) {
-			permissions['userMayUpload'] = true;
-			permissions['uploadsAllowed'] =  true;
+		_mwtCheckUploadPermissions = function( editor ) {
+			// function to check what upload permissions this user has
+			// it will provide an alert if certain permissions aren't granted
+			// and returns a value saying what permiossions the user has
+			var permissions = [];
+				
+			// start by assuming nothing is allowed
+			permissions['userMayUpload'] = false;
+			permissions['userMayUploadFromURL'] = false;
+			permissions['uploadsAllowed'] =  false;
+	  
+			if (mw.config.get( 'wgTinyMCEUserMayUpload' )) {
+				permissions['userMayUpload'] = true;
+				permissions['uploadsAllowed'] =  true;
+			}
+	  
+			if (mw.config.get( 'wgTinyMCEUserMayUploadFromURL' )) {
+				permissions['userMayUploadFromURL'] = true;
+				permissions['uploadsAllowed'] =  true;
+			}
+	  
+			if (mw.config.get( 'wgReadOnly' )) {
+				editor.windowManager.alert(mw.config.get( 'wgReadOnly' ));
+				permissions['uploadsAllowed'] = false;
+			}
+	  
+			if (!mw.config.get( 'wgEnableUploads' )) {
+				editor.windowManager.alert(mw.msg("tinymce-upload-alert-uploads-not-enabled"));
+				permissions['uploadsAllowed'] = false;
+			}
+	  
+			if (mw.config.get( 'wgTinyMCEUserIsBlocked' )) {
+				editor.windowManager.alert(mw.msg("tinymce-upload-alert-uploads-not-allowed"));
+				permissions['uploadsAllowed'] = false;
+			}
+			return permissions;
 		}
-
-		if (mw.config.get( 'wgTinyMCEUserMayUploadFromURL' )) {
-			permissions['userMayUploadFromURL'] = true;
-			permissions['uploadsAllowed'] =  true;
-		}
-
-		if (mw.config.get( 'wgReadOnly' )) {
-			editor.windowManager.alert(mw.config.get( 'wgReadOnly' ));
-			permissions['uploadsAllowed'] = false;
-		}
-
-		if (!mw.config.get( 'wgEnableUploads' )) {
-			editor.windowManager.alert(mw.msg("tinymce-upload-alert-uploads-not-enabled"));
-			permissions['uploadsAllowed'] = false;
-		}
-
-		if (mw.config.get( 'wgTinyMCEUserIsBlocked' )) {
-			editor.windowManager.alert(mw.msg("tinymce-upload-alert-uploads-not-allowed"));
-			permissions['uploadsAllowed'] = false;
-		}
-		return permissions;
-	}
-
-		// abort if permissions not Ok
-//		if (!checkPermisionsOk()) return;
-/*		uploadPersmissions = _mwtCheckUploadPermissions(editor);
-		if ( !uploadPersmissions.uploadsAllowed ) return;*/
-
 
 	_userThumbsize = _thumbsizes[ mw.user ? mw.user.options.get('thumbsize') : 3 ];
 	
@@ -95,7 +92,7 @@ _mwtCheckUploadPermissions = function( editor ) {
 			imageDimensions = editor.settings.image_dimensions !== false,
 			uploadPersmissions = [];
 
-
+debugger;
 		/**
 		 * display upload dialog
 		 *
@@ -945,7 +942,7 @@ _mwtCheckUploadPermissions = function( editor ) {
 					wikitext = '';
 
 				// attempt upload of file to wiki
-				function doUpload(fileType, fileToUpload, fileName, fileSummary, ignoreWarnings){
+/*				function doUpload(fileType, fileToUpload, fileName, fileSummary, ignoreWarnings){
 					var uploadData = new FormData(),
 						uploadDetails;
 
@@ -980,14 +977,14 @@ _mwtCheckUploadPermissions = function( editor ) {
 					api.unblock();
 
 					return uploadDetails;
-				}
+				}*/
 	
 				// check upload succesful or report errors and warnings
-				function checkUploadDetail(uploadDetails, ignoreWarnings) {
+/*				function checkUploadDetail(uploadDetails, ignoreWarnings) {
 					var message,
 						result = [];
-						
-					if (typeof uploadDetails == "undefined") {
+debugger;	
+					if ( typeof uploadDetails == "undefined") {
 						editor.windowManager.alert(mw.msg("tinymce-upload-alert-unknown-error-uploading"));
 						result = false;
 					} else if (typeof uploadDetails.error != "undefined") {
@@ -1006,7 +1003,9 @@ _mwtCheckUploadPermissions = function( editor ) {
 						message = mw.msg("tinymce-upload-alert-error-uploading",uploadDetails.upload.error.info);
 						editor.windowManager.alert(message);
 						result = false;
-					} else if (typeof uploadDetails.upload.warnings != "undefined" && (!ignoreWarnings)) {
+					} else if (typeof uploadDetails.upload.warnings != "undefined" 
+						&& ( uploadDetails.upload.result != 'Success' )
+						&& (!ignoreWarnings)) {
 						message = mw.msg("tinymce-upload-alert-warnings-encountered") + "\n\n" ;  
 						result = 'warning';
 						for (warning in uploadDetails.upload.warnings) {
@@ -1049,7 +1048,7 @@ _mwtCheckUploadPermissions = function( editor ) {
 						result["page"] = uploadDetails.upload.imageinfo.canonicaltitle;
 					}
 					return result;
-				}
+				}*/
 	
 				// first check source and destination details are valid
 				if (!uploadCheck( api )) return;
@@ -1082,7 +1081,7 @@ _mwtCheckUploadPermissions = function( editor ) {
 						if ((fileContent) && (fileName)) {
 							do {
 								uploadDetails = doUpload(fileType, fileContent, fileName, fileSummary, ignoreWarnings);
-								result = checkUploadDetail(uploadDetails, ignoreWarnings);
+								result = checkUploadDetail( editor, uploadDetails, ignoreWarnings, fileName );
 								if (result) {
 									if ( Array.isArray( result ) ) {
 										uploadResult = result["url"];

@@ -70,7 +70,9 @@ $GLOBALS['wgHooks']['MakeGlobalVariablesScript'][] = 'TinyMCEHooks::setGlobalJSV
 $GLOBALS['wgHooks']['MagicWordwgVariableIDs'][] = 'TinyMCEHooks::addMagicWordVariableIDs';
 $GLOBALS['wgHooks']['ParserAfterTidy'][] = 'TinyMCEHooks::handleMagicWords';
 $GLOBALS['wgHooks']['SkinTemplateNavigation'][] = 'TinyMCEAction::displayTab';
+$GLOBALS['wgHooks']['SkinTemplateTabAction'][] = 'inyMCEHooks::modifyTalkPageLink';
 $GLOBALS['wgHooks']['SkinEditSectionLinks'][] = 'TinyMCEHooks::addEditSectionLink';
+
 if ( class_exists( 'MediaWiki\Linker\LinkRenderer' ) ) {
 	// MW 1.28+
 	$GLOBALS['wgHooks']['HtmlPageLinkRendererEnd'][] = 'TinyMCEHooks::changeRedLink';
@@ -177,6 +179,7 @@ $GLOBALS['wgResourceModules'] += array(
 			'tinymce-upload-alert-source-or-destination-undefined',
 			'tinymce-upload-alert-file-source-empty',
 			'tinymce-upload-confirm-file-already-exists',
+			'tinymce-upload-confirm-file-is-duplicate',
 			'tinymce-upload-confirm-file-not-on-wiki',
 			'tinymce-upload-confirm-ignore-warnings',
 			'tinymce-upload-menu-item-text',
@@ -216,7 +219,9 @@ $GLOBALS['wgResourceModules'] += array(
 			'tinymce-link-context-menu',
 			'tinymce-link',
 			'tinymce-insert-linebreak',
-			'tinymce-toggle-button-toggle-wiki-placeholders'
+			'tinymce-toggle-button-toggle-wiki-placeholders',
+			"tinymce-nonbreaking-insertNonBreakingSpace",
+			'tinymce-reference-insertReference'
 		)
 	),
 	'ext.tinymce.core' => $wgTinyMCEResourceTemplate + array(
