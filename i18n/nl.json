@@ -114,6 +114,7 @@
 	"tinymce-upload-alert-correct-and-try-again": "Corrigeer de fouten en probeer dan opnieuw",
 	"tinymce-upload-alert-destination-filename-needed": "Het spijt me, maar u moet een bestandsbestemming invoeren. Indien de gegenereerde bestemming okay is, druk dan op Verzenden. Verander anders de bestandsbestemming",
 	"tinymce-upload-alert-source-or-destination-undefined": "Het spijt me, maar het probleem is opgetreden dat de bron of de bestemming niet gedefinieerd is. Controleer deze en probeer het dan opnieuw",
+	"tinymce-upload-alert-file-source-empty" : "Voordat u de eigenschappen van de afbeelding kan aanpassen moet u een bronbestand selecteren.",
 	"tinymce-upload-confirm-file-already-exists": "De bestandsbestemming $1 bestaat al op deze wiki. Selecteer OK als u het bestaande bestand wil gebruiken of selecteer Annuleer en gebruik een andere bestandsbestemming voor deze upload",
 	"tinymce-upload-confirm-file-not-on-wiki": "Het bestand bestaat niet op deze wiki. Selecteer OK als u een nieuw bestand wil uploaden of selecteer Annuleer en voer een nieuwe bestandsnaam in voor deze link",
 	"tinymce-upload-confirm-ignore-warnings": "Selecteer OK als u het nog eens wilt proberen en de waarschuwingen wil negeren. Selecteer anders Annuleer",
@@ -145,5 +146,7 @@
 	"tinymce-link-link-remove-button-tooltip": "Verwijderen link",
 	"tinymce-link-open-link": "Open link",
 	"tinymce-link-context-menu": "openlink | link unlink",
-	"tinymce-link": "Link"
+	"tinymce-link": "Link",
+	"tinymce-toggle-button-toggle-wiki-placeholders": "Onzichtbare opmaak weergeven",
+	"tinymce-reference-insertReference": "Voetnoot invoegen"
 }
