@@ -231,10 +231,15 @@ var Ws_Link = function(editor) {
 
     // Adds a menu item, which can then be included in any menu via the menu/menubar configuration
     editor.ui.registry.addMenuItem('wslink', {
-        text: 'Link',
+        text: 'Insert',
+        context: 'wslink',
+        prependToContext: true,
         onAction: function() {
             // Open window
-            openDialog();
+            var node = editor.selection.getNode();
+            if ( $(node).hasClass('mwt-ws-non-editable') ) {
+                showWsLinkDialog();
+            }
         }
     });
 
