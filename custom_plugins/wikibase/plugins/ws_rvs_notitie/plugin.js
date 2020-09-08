@@ -107,10 +107,6 @@ var WsRvsNotitie = function(editor) {
                 var selection = editor.selection.getSel();
                 var node;
                 if ( type === 'interne tekst' ) {
-                    console.log({
-                        selection: selection,
-                        focusNode: focusNode
-                    })
                     node = $(selection.focusNode).find('span.rvs-only')[0];
                 } else {
                     node = $(selection.focusNode).find('p.mwt-paragraph')[0];

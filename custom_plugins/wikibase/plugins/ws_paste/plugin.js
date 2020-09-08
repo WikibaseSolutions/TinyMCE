@@ -1,6 +1,19 @@
 var Ws_Paste = function (editor) {
     "use strict";
 
+    function _removeUnWantedClasses(html) {
+        $(html).find('.rvs-collapse').removeClass('rvs-collapse');
+        $(html).find('.rvs-hover-collapse').removeClass('rvs-hover-collapse');
+        return html;
+    }
+
+    function _removeUnWantedMarkJSSpans(html) {
+        $(html).find('span[class^="highlight"][data-markjs]').replaceWith(function () {
+            return this.innerHTML;
+        });
+        return html;
+    }
+
     function _pastePreProcess(e, data) {
         var html = '<div>' + data.text + '</div>';
         var $html = $(html);
@@ -15,6 +28,8 @@ var Ws_Paste = function (editor) {
                 return newHt;
             });
         }
+        $html = _removeUnWantedClasses($html);
+        $html = _removeUnWantedMarkJSSpans($html);
         html = $($html).html();
         var textObject = {text: html};
         $(document).trigger('TinyMCEBeforeWikiToHtml', [textObject]);
