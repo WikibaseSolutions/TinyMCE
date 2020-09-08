@@ -832,7 +832,8 @@
 
     var pasteHtml = function (editor, html) {
 
-/*      editor.insertContent(html, {
+/*DC did this
+      editor.insertContent(html, {
         merge: shouldMergeFormats(editor),
         paste: true
       });*/
@@ -1021,12 +1022,13 @@
     };
     var uniqueId = createIdGenerator('mceclip');
     var pasteImage = function (editor, imageItem) {
-
+debugger;
       var _a = parseDataUri(imageItem.uri), base64 = _a.data, type = _a.type;
       var id = uniqueId();
       var name = editor.settings.images_reuse_filename && imageItem.blob.name ? extractFilename(editor, imageItem.blob.name) : id;
       var img = new domGlobals.Image();
       img.src = imageItem.uri;
+/* DC did this
       if (isValidDataUriImage(editor.settings, img)) {
         var blobCache = editor.editorUpload.blobCache;
         var blobInfo = void 0;
@@ -1038,9 +1040,9 @@
           blobInfo = existingBlobInfo;
         }
         pasteHtml$1(editor, '<img src="' + blobInfo.blobUri() + '">', false);
-      } else {
+      } else {*/
         pasteHtml$1(editor, '<img src="' + imageItem.uri + '">', false);
-      }
+//      }
     };
     var isClipboardEvent = function (event) {
       return event.type === 'paste';
@@ -1434,9 +1436,17 @@
       };
     };
     var getData = function (editor) {
+// DC did this 2708
+		var html,
+			text;
+			
+//		html = "<div class='mwt-tiny-copy'>" + editor.selection.getContent({ contextual: true }) + "</div>";
+//		text = 	editor.selection.getContent({ format: 'text' });
       return {
         html: editor.selection.getContent({ contextual: true }),
         text: editor.selection.getContent({ format: 'text' })
+//        html: html,
+//        text: text,
       };
     };
     var isTableSelection = function (editor) {
