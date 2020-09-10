@@ -109,7 +109,11 @@ var WsRvsNotitie = function(editor) {
                 if ( type === 'interne tekst' ) {
                     node = $(selection.focusNode).find('span.rvs-only')[0];
                 } else {
-                    node = $(selection.focusNode).find('p.mwt-paragraph')[0];
+                    $(selection.focusNode).find('p.mwt-paragraph').each((i, el) => {
+                        if ( $(el).text() === 'TEKST' ) {
+                            node = el;
+                        }
+                    });
                 }
                 editor.selection.select(node, true);
                 editor.focus();
