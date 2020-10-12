@@ -9,7 +9,7 @@
 	var mw_title = mw.config.get( "wgTitle" );
 	var tinyMCETemplates = mw.config.get( 'wgTinyMCETemplates' );
 	var tinyMCETagList = mw.config.get( 'wgTinyMCETagList' );
-	var tinyMCEPreservedTagList = mw.config.get( 'wgTinyMCEPreservedTagList' );
+//	var tinyMCEPreservedTagList = mw.config.get( 'wgTinyMCEPreservedTagList' );
 	var tinyMCELanguage = mw.config.get( 'wgTinyMCELanguage' );
 	var tinyMCEDirectionality = mw.config.get( 'wgTinyMCEDirectionality' );
 	var tinyMCESettings = mw.config.get( 'wgTinyMCESettings' );
@@ -65,7 +65,10 @@
 	//  'link', 'meta', 'wbr',
 	];
 	var mw_htmlSingleOnly = [
-	  'br', 'hr', 'link', 'meta', 'wbr',
+		'br', 'hr', 'link', 'meta', 'wbr', // these are html tags too
+	];
+	var mw_extensionSingleOnly = [
+		'references', 
 	];
 	var mw_htmlNestable = [
 	  'bdo', 'big', 
@@ -84,8 +87,13 @@
 	var mw_htmlInsideList = [
 	  'li',
 	];
+	// the following will be used so TinyMCE doesn't filter out parser tags defined in the wiki
 	var mw_preservedTagsList = mw_htmlPairsStatic.concat(mw_htmlSingleOnly, mw_htmlNestable, mw_htmlInvariants).join("|") + "|" + tinyMCETagList; 
-	
+	var mw_parserValidElements = tinyMCETagList.split("|").join("[*],") + '[*]';
+	var mw_parserCustomElements = '~' + tinyMCETagList.split("|").join(",~");
+	// for some reason, setting short_ended_elements overwrites the defaults, so we include them here
+	var mw_parserShortElements = tinyMCETagList.split("|").join(" ") + ' area base basefont br col frame hr img input isindex link meta param embed source wbr track' ;
+
 	//set up other mw related constants
 	
 	// set up language url if language not 'en'
@@ -108,13 +116,13 @@
 	  }
 	};
 
-
 	var setContent = function ( editor, content, args ) {
 		// sets the content of the editor window
 		editor.focus();
 		editor.undoManager.transact( function () {
 			editor.setContent( content, args );
 		});
+		editor.focus();
 		editor.selection.setCursorLocation();
 		editor.nodeChanged();
 	};
@@ -158,12 +166,10 @@
 	};
 
 	var htmlDecode = function ( value ) {
-//		return $("<textarea/>").html( value ).text();
 		return tinymce.DOM.decode( value );
 	};
 	
 	var  htmlEncode = function (value) {
-//		return $('<textarea/>').text(value).html();
 		return tinymce.DOM.encode( value );
 	};
 	
@@ -171,8 +177,8 @@
 		return Math.floor( ( Math.random() * 100000000 ) + Date.now());
 	};
 	
-	var translate = function( message ) {
-		return mw.msg( message )
+	var translate = function( message, p1, p2, p3,p4, p5, p6 ) {
+		return mw.msg( message, p1, p2, p3,p4, p5, p6 )
 	};
 
 /*	var onDblClickLaunch = function ( editor, aTarget, aClass, aCommand) {	
@@ -201,13 +207,12 @@
 			editor.on('NodeChange', function (e) {
 				var selectedNode = e.element,
 					parents;
-//debugger;
-//				api.setDisabled(true);
+
 				api.setDisabled( on );
 				
 				for (var selector in selectors) {
 					if (selectedNode.className.indexOf( selectors[ selector ]) > -1) {
-//						editor.selection.select(selectedNode);
+
 						editor.off('NodeChange', true);
 						return api.setDisabled( !on );						
 					}
@@ -220,20 +225,9 @@
 					return api.setDisabled(false);						
 				}
 				
-/*				while (selectedNode.parentNode != null) {
-					if (typeof selectedNode.className != "undefined") {
-						for (var selector in selectors) {
-							if (selectedNode.className.indexOf( selectors[ selector ]) > -1) {
-								editor.selection.select(selectedNode);
-								editor.off('NodeChange', true);
-								return api.setDisabled(false);						
-							}
-						}
-					}
-					selectedNode = selectedNode.parentNode;
-				}*/
+
 			});
-//			return editor.off('NodeChange', true);
+
 		};
 	};
 
@@ -273,65 +267,56 @@
 	var checkUploadDetail = function (editor, uploadDetails, ignoreWarnings, uploadName) {
 		var message,
 			result = [];
-debugger;
+
 		if (typeof uploadDetails == "undefined") {
 			message = mw.msg("tinymce-upload-alert-unknown-error-uploading",
 				uploadName );
-			result = false;
+			result["state"] = 'error';
+
 		} else if (typeof uploadDetails.responseText != "undefined") {
 			message = mw.msg("tinymce-upload-alert-error-uploading",uploadDetails.responseText);
 			editor.windowManager.alert(message);
-			result = false;
+			result["state"] = 'error';
+
 		} else if (typeof uploadDetails.error != "undefined") {
 			message = mw.msg("tinymce-upload-alert-error-uploading",uploadDetails.error.info);
 			// if the error is because the file exists then we can ignore and
 			// use the existing file
 			if (uploadDetails.error.code == "fileexists-no-change") {
-				result = 'exists';
+				result["state"] = 'exists';
 			} else {
-				result = false;
+				result["state"] = 'error';
 				editor.windowManager.alert(message);
 			}
 		} else if (typeof uploadDetails.upload.warnings != "undefined" && (!ignoreWarnings)) {
 			message = mw.msg("tinymce-upload-alert-warnings-encountered", uploadName) + "\n\n" ;
-			result = 'warning';
 			for (warning in uploadDetails.upload.warnings) {
 				warningDetails = uploadDetails.upload.warnings[warning];
 				if (warning == 'badfilename') {
 					message = message + "	" + mw.msg("tinymce-upload-alert-destination-filename-not-allowed") + "\n";
 					editor.windowManager.alert(message);
-					result = false;
+					result["state"] = 'error';
 				} else if (warning == 'exists') {
-//					message = message + "	" + mw.msg("tinymce-upload-alert-destination-filename-already-exists") + "\n";
 					editor.windowManager.confirm(mw.msg("tinymce-upload-confirm-file-already-exists", uploadName),
 						function(ok) {
 							if (ok) {
-								result = 'exists';
+								result["state"] = 'exists';
 							} else {
-								result = false;
+								result["state"] = 'error';
 							}
 						});
 				} else if (warning == 'duplicate') {
-//					duplicate = warningDetails[ 0 ];
-					editor.windowManager.confirm(mw.msg("tinymce-upload-confirm-file-is-duplicate", uploadName, warningDetails[ 0 ]),
-						function(ok) {
-							if (ok) {
-								result = warningDetails[ 0 ];
-							} else {
-								result = false;
-							}
-						});
-/*					message = message + "	" + mw.msg("tinymce-upload-alert-duplicate-file",warningDetails[ 0 ]) + "\n"
-					result = 'duplicate';*/
+					result["state"] = 'duplicate';
+					result["url"] = uploadDetails.upload.imageinfo.url;
+					result["page"] = uploadDetails.upload.imageinfo.canonicaltitle;
 				} else {
 					message = message + "	" + mw.msg("tinymce-upload-alert-other-warning",warning) + "\n"
 					editor.windowManager.alert(message);
-					result = false;
+					result["state"] = 'error';
 				}
 			}
-//			editor.windowManager.alert(message);
 		} else if (typeof uploadDetails.upload.imageinfo != "undefined") {
-//			result = uploadDetails.upload.imageinfo.url;
+			result["state"] = 'ok';
 			result["url"] = uploadDetails.upload.imageinfo.url;
 			result["page"] = uploadDetails.upload.imageinfo.canonicaltitle;
 		}
@@ -356,6 +341,7 @@ debugger;
 var defaultSettings = function(selector) {
 	return {
 		selector: selector,
+		auto_focus: true,
 		base_url: mw_extensionAssetsPath + '/TinyMCE/tinymce',
 		theme_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/themes/silver/theme.min.js',
 		skin_url: mw_extensionAssetsPath + '/TinyMCE/tinymce/skins/ui/oxide',
@@ -389,6 +375,7 @@ var defaultSettings = function(selector) {
 //			'link': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/link/plugin.js',
 			'lists': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/lists/plugin.js',
 //			'media': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/media/plugin.js',
+//			'n1ed': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/n1ed/plugins/n1ed/plugin.js',
 			'noneditable': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/noneditable/plugin.js',
 //			'paste': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/paste/plugin.js',
 			'preview': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/preview/plugin.js',
@@ -404,6 +391,7 @@ var defaultSettings = function(selector) {
 			'wikipaste': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js',
 			'wikireference': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikireference/plugin.js',
 			'wikitable': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitable/plugin.js',
+			'wikitemplate': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitemplate/plugin.js',
 			'wikitext': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitext/plugin.js',
 			'wikitoggle': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikitoggle/plugin.js',
 			'wikiupload': mw_extensionAssetsPath + '/TinyMCE/custom_plugins/mediawiki/plugins/mw_wikiupload/plugin.js',
@@ -428,17 +416,20 @@ var defaultSettings = function(selector) {
 		wiki_url_protocols: mw_url_protocols,
 		// following allowed html tags are taken from
 		// https://phabricator.wikimedia.org/source/mediawiki/browse/REL1_29/includes/Sanitizer.php
-//		wiki_tags_list: tinyMCETagList + '|' + tinyMCEPreservedTagList,
 		wiki_extension_tags_list: tinyMCETagList,
 		wiki_preserved_tags_list: mw_preservedTagsList,
 		wiki_preserved_single_tags_list: mw_htmlSingle.concat(mw_htmlInsideTable).join("|"),
 		wiki_preserved_pairs_static_tags_list: mw_htmlPairsStatic.join("|"),
 		wiki_preserved_pairs_nestable_tags_list: mw_htmlNestable.join("|"),
 		wiki_preserved_pairs_tags_list: mw_htmlPairsStatic.concat(mw_htmlNestable).join("|"),
-//		wiki_preserved_tags_list: mw_htmlPairsStatic.concat(mw_htmlSingleOnly, mw_htmlNestable).join("|") + tinyMCETagList,
 		wiki_block_tags: mw_htmlBlockPairsStatic.join("|"),
 		wiki_invariant_tags: mw_htmlInvariants.join("|"),
 //		wiki_preserved_html_tags: mw_preserveHtml.join("|"),
+		mediawikiTemplateClasses: [
+			'mcePartOfTemplate',
+		],
+		// n1ed config
+		apiKey: "2ZVEDFLT",
 		//
 		// ** TinyMCE editor settings **
 		//
@@ -478,11 +469,20 @@ var defaultSettings = function(selector) {
 			{title: 'Internal', value: 'mwt-nonEditable mwt-wikiMagic mwt-internallink'},
 		],
 		target_list: false,
-//		visual_table_class : "wikitable",
-		visual_table_class: " ",
-/*		table_default_attributes: {
+//		visual_table_class: "wikitable",
+		table_default_attributes: {
 			class: 'wikitable'
-		},*/
+		},
+		table_class_list: [
+			{title: 'None', value: ''},
+			{title: 'Wikitable', value: 'wikitable'}
+		],
+		table_cell_class_list: [
+			{title: 'None', value: ''}
+		],
+		table_row_class_list: [
+			{title: 'None', value: ''}
+		],
 		height: 500,
 		autoresize_max_height: 600,
 		statusbar: false,
@@ -493,7 +493,7 @@ var defaultSettings = function(selector) {
 		// enable resizing for element like images, tables or media objects
 		object_resizing: true,
 		// the html mode for tag creation (we need xhtml)
-		element_format: 'xhtml',
+//		element_format: 'xhtml',
 //		element_format: 'html',
 		// define the element what all inline elements needs to be wrapped in
 		forced_root_block: 'p',
@@ -509,7 +509,12 @@ var defaultSettings = function(selector) {
 		save_enablewhendirty: true,
 		// Allow style tags in body and unordered lists in spans (inline)
 		valid_children: "+span[ul],+span[div],+em[div],+big[div],+small[div],-p[p]",//+p[div]",
-		extended_valid_elements: "big,small",
+		extended_valid_elements: "span[*],big,small," + mw_parserValidElements,
+		custom_elements: mw_parserCustomElements,
+//		short_ended_elements: mw_parserShortElements,	
+//		short_ended_elements: 'references',	
+		noneditable_noneditable_class: 'fa',
+//		extended_valid_elements: '',
 //	    custom_elements: "~nowiki",
 //		closed: /^(br|hr|input|meta|img|link|param|area|nowiki)$/,
 //		valid_children: "+*[*]",
@@ -528,12 +533,13 @@ var defaultSettings = function(selector) {
 			{title: mw.msg("tinymce-upload-type-label-url"), value: 'URL'},
 			{title: mw.msg("tinymce-upload-type-label-wiki"), value: 'Wiki'}
 		],
+		images_dataimg_filter: function(img) {
+			return false;
+		},
 		menubar: false, //'edit insert view format table tools',
 		contextmenu_never_use_native: false,
 //		removed_menuitems: 'media',
 		// fontawesome configuration
-		noneditable_noneditable_class: 'fa',
-		extended_valid_elements: 'span[*]',
 		// tinymce configuration
 		toolbar_sticky: true,
 //		toolbar1: 'undo redo | cut copy paste insert | bold italic underline strikethrough subscript superscript forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | charmap fontawesome singlelinebreak wikilink unlink table wikiupload wikimagic wikisourcecode | formatselect styleselect removeformat | searchreplace ',
@@ -574,6 +580,21 @@ var defaultSettings = function(selector) {
 //		autoresize_max_height: 400,
 		template_selected_content_classes: "selectedcontent",
 		setup: function (editor) {
+			editor.on('PreInit', function() {
+				// we need to tell the editor which wiki parser tags
+				// or short ended as we can't find this out from the wiki itself
+				// Standard ones are identified above
+				var shortEndedElements = editor.schema.getShortEndedElements();
+				var extensionShortEndedTags = editor.getParam( "mediawikiExtensionTagsShortEnded" )
+				for (tag in mw_extensionSingleOnly) {
+					shortEndedElements[ mw_extensionSingleOnly[ tag ]] = {};
+				}
+				if ( extensionShortEndedTags ) {
+					for (tag in extensionShortEndedTags) {
+						shortEndedElements[ extensionShortEndedTags[ tag ] ] = {};
+					}
+				}
+			});
 		},
 		init_instance_callback: function (instance) {
 			// For some reason, in some installations this only works as an inline function,
