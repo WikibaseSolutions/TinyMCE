@@ -20,14 +20,15 @@ var Ws_Paste = function (editor) {
         if ( $($html).find('span.mwt-ws-non-editable').length > 0 ) {
             $($html).find('span[data-wiki]').parent().replaceWith(function (i) {
                 var newHt = $(this).find('span[data-wiki]').attr('data-wiki');
-                return newHt;
+                return convertBack2Wiki(newHt);
             });
         } else {
             $($html).find('span[data-wiki]').replaceWith(function (i) {
                 var newHt = $(this).attr('data-wiki');
-                return newHt;
+                return convertBack2Wiki(newHt);
             });
         }
+        console.log($html);
         $html = _removeUnWantedClasses($html);
         $html = _removeUnWantedMarkJSSpans($html);
         html = $($html).html();
@@ -41,8 +42,11 @@ var Ws_Paste = function (editor) {
         return data;
     }
 
+    function convertBack2Wiki(txt) {
+        return txt.replaceAll("{{!}}", "|");
+    }
+
     this.init = function (ed, url) {
-        console.log("init ws_paste");
         $(document).on('TinyMCEBeforePastePreProcess', _pastePreProcess);
     }
 
