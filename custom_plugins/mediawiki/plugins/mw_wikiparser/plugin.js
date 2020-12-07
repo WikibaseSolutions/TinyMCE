@@ -178,13 +178,6 @@
 
 		/**
 		 *
-		 * flags used to determine which debug logs are active
-		 * @type Array
-		 */
-		_mwtDebugFlags = editor.getParam("tinyMCEDebugFlags"),
-
-		/**
-		 *
 		 * Flag used for toggling visible placeholders on or off and
 		 * variable containing initial class value for the placeholders
 		 *
@@ -1432,7 +1425,7 @@
 
 					refHtml = $3.replace(/\n/gm, '{@@@ENL:0@@@}');
 					refHtml = refHtml.replace(/([^}])\{@@@ENL:0@@@}\{@@@ENL:0@@@}/gmi, '$1{@@@ELF:0@@@}');
-					refHtml = _convertWiki2Html( $.trim( refHtml ), "inline" );
+					refHtml = _convertWiki2Html( $.trim( $3 ), "inline" );
 					
 					if ( refHtml == '' ) {
 						refHtml = 'Empty reference'
@@ -4077,8 +4070,6 @@
 			e.content = htmlDecode( e.content );
 		}
 
-		debug( editor, "anteOnBeforeSetContent", _mwtDebugFlags.anteOnBeforeSetContent, e.content );
-
 		// if the format is raw then don't process further
 		if (e.format == 'raw' ) {
 			return;
@@ -4259,6 +4250,7 @@
 		var text = e.content;
 		
 		debug( editor, "anteOnGetContent", _mwtDebugFlags.anteOnGetContent, text );
+
 		// sanitize the content to be sure xss vulnerabilities are removed
 		text = _sanitize( text, false );
 
@@ -4394,7 +4386,7 @@
 				selected = range.toString(),
 				start = range.startOffset,
 				end = range.endOffset;
-debugger;
+
 			if ( end - start > 1 ) {
 				// has to be at least 2 long in order to trim
 				if ( start != end ) {
@@ -4627,8 +4619,6 @@ function wikiparser( editor ) {
 		editor.on('dblclick', _onDblClick);
 		editor.on('keydown', _onKeyDown);
 		editor.on('keyup', _onKeyUp);
-		editor.on('undo', function() {debugger;});
-		editor.on('redo', function() {debugger;});
 
 		//
 		// add processing for browser context menu
