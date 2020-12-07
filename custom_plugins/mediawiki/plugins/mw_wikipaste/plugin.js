@@ -4,7 +4,11 @@
  * For LGPL see License.txt in the project root for license information.
  * For commercial licenses see https://www.tiny.cloud/
  *
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
  * Version: 5.3.0 (2020-05-21)
+========
+ * Version: 5.4.2 (2020-08-17)
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
  */
 (function (domGlobals) {
     'use strict';
@@ -26,7 +30,11 @@
     var global = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
     var hasProPlugin = function (editor) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       if (/(^|[ ,])powerpaste([, ]|$)/.test(editor.settings.plugins) && global.get('powerpaste')) {
+========
+      if (/(^|[ ,])powerpaste([, ]|$)/.test(editor.getParam('plugins')) && global.get('powerpaste')) {
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
         if (typeof domGlobals.window.console !== 'undefined' && domGlobals.window.console.log) {
           domGlobals.window.console.log('PowerPaste is incompatible with Paste plugin! Remove \'paste\' from the \'plugins\' option.');
         }
@@ -73,6 +81,7 @@
         firePastePlainTextToggle(editor, true);
       }
       editor.focus();
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
     };
 
     var register = function (editor, clipboard) {
@@ -279,6 +288,280 @@
     var global$4 = tinymce.util.Tools.resolve('tinymce.util.Tools');
 
     var global$5 = tinymce.util.Tools.resolve('tinymce.util.VK');
+========
+    };
+
+    var register = function (editor, clipboard) {
+      editor.addCommand('mceTogglePlainTextPaste', function () {
+        togglePlainTextPaste(editor, clipboard);
+      });
+      editor.addCommand('mceInsertClipboardContent', function (ui, value) {
+        if (value.content) {
+          clipboard.pasteHtml(value.content, value.internal);
+        }
+        if (value.text) {
+          clipboard.pasteText(value.text);
+        }
+      });
+    };
+
+    var noop = function () {
+    };
+    var constant = function (value) {
+      return function () {
+        return value;
+      };
+    };
+    var never = constant(false);
+    var always = constant(true);
+
+    var none = function () {
+      return NONE;
+    };
+    var NONE = function () {
+      var eq = function (o) {
+        return o.isNone();
+      };
+      var call = function (thunk) {
+        return thunk();
+      };
+      var id = function (n) {
+        return n;
+      };
+      var me = {
+        fold: function (n, _s) {
+          return n();
+        },
+        is: never,
+        isSome: never,
+        isNone: always,
+        getOr: id,
+        getOrThunk: call,
+        getOrDie: function (msg) {
+          throw new Error(msg || 'error: getOrDie called on none.');
+        },
+        getOrNull: constant(null),
+        getOrUndefined: constant(undefined),
+        or: id,
+        orThunk: call,
+        map: none,
+        each: noop,
+        bind: none,
+        exists: never,
+        forall: always,
+        filter: none,
+        equals: eq,
+        equals_: eq,
+        toArray: function () {
+          return [];
+        },
+        toString: constant('none()')
+      };
+      return me;
+    }();
+    var some = function (a) {
+      var constant_a = constant(a);
+      var self = function () {
+        return me;
+      };
+      var bind = function (f) {
+        return f(a);
+      };
+      var me = {
+        fold: function (n, s) {
+          return s(a);
+        },
+        is: function (v) {
+          return a === v;
+        },
+        isSome: always,
+        isNone: never,
+        getOr: constant_a,
+        getOrThunk: constant_a,
+        getOrDie: constant_a,
+        getOrNull: constant_a,
+        getOrUndefined: constant_a,
+        or: self,
+        orThunk: self,
+        map: function (f) {
+          return some(f(a));
+        },
+        each: function (f) {
+          f(a);
+        },
+        bind: bind,
+        exists: bind,
+        forall: bind,
+        filter: function (f) {
+          return f(a) ? me : NONE;
+        },
+        toArray: function () {
+          return [a];
+        },
+        toString: function () {
+          return 'some(' + a + ')';
+        },
+        equals: function (o) {
+          return o.is(a);
+        },
+        equals_: function (o, elementEq) {
+          return o.fold(never, function (b) {
+            return elementEq(a, b);
+          });
+        }
+      };
+      return me;
+    };
+    var from = function (value) {
+      return value === null || value === undefined ? NONE : some(value);
+    };
+    var Option = {
+      some: some,
+      none: none,
+      from: from
+    };
+
+    var isSimpleType = function (type) {
+      return function (value) {
+        return typeof value === type;
+      };
+    };
+    var isFunction = isSimpleType('function');
+
+    var nativeSlice = Array.prototype.slice;
+    var map = function (xs, f) {
+      var len = xs.length;
+      var r = new Array(len);
+      for (var i = 0; i < len; i++) {
+        var x = xs[i];
+        r[i] = f(x, i);
+      }
+      return r;
+    };
+    var each = function (xs, f) {
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        f(x, i);
+      }
+    };
+    var filter = function (xs, pred) {
+      var r = [];
+      for (var i = 0, len = xs.length; i < len; i++) {
+        var x = xs[i];
+        if (pred(x, i)) {
+          r.push(x);
+        }
+      }
+      return r;
+    };
+    var foldl = function (xs, f, acc) {
+      each(xs, function (x) {
+        acc = f(acc, x);
+      });
+      return acc;
+    };
+    var from$1 = isFunction(Array.from) ? Array.from : function (x) {
+      return nativeSlice.call(x);
+    };
+
+    var value = function () {
+      var subject = Cell(Option.none());
+      var clear = function () {
+        subject.set(Option.none());
+      };
+      var set = function (s) {
+        subject.set(Option.some(s));
+      };
+      var on = function (f) {
+        subject.get().each(f);
+      };
+      var isSet = function () {
+        return subject.get().isSome();
+      };
+      return {
+        clear: clear,
+        set: set,
+        isSet: isSet,
+        on: on
+      };
+    };
+
+    var global$1 = tinymce.util.Tools.resolve('tinymce.Env');
+
+    var global$2 = tinymce.util.Tools.resolve('tinymce.util.Delay');
+
+    var global$3 = tinymce.util.Tools.resolve('tinymce.util.Promise');
+
+    var global$4 = tinymce.util.Tools.resolve('tinymce.util.VK');
+
+    var shouldBlockDrop = function (editor) {
+      return editor.getParam('paste_block_drop', false);
+    };
+    var shouldPasteDataImages = function (editor) {
+      return editor.getParam('paste_data_images', false);
+    };
+    var shouldFilterDrop = function (editor) {
+      return editor.getParam('paste_filter_drop', true);
+    };
+    var getPreProcess = function (editor) {
+      return editor.getParam('paste_preprocess');
+    };
+    var getPostProcess = function (editor) {
+      return editor.getParam('paste_postprocess');
+    };
+    var getWebkitStyles = function (editor) {
+      return editor.getParam('paste_webkit_styles');
+    };
+    var shouldRemoveWebKitStyles = function (editor) {
+      return editor.getParam('paste_remove_styles_if_webkit', true);
+    };
+    var shouldMergeFormats = function (editor) {
+      return editor.getParam('paste_merge_formats', true);
+    };
+    var isSmartPasteEnabled = function (editor) {
+      return editor.getParam('smart_paste', true);
+    };
+    var isPasteAsTextEnabled = function (editor) {
+      return editor.getParam('paste_as_text', false);
+    };
+    var getRetainStyleProps = function (editor) {
+      return editor.getParam('paste_retain_style_properties');
+    };
+    var getWordValidElements = function (editor) {
+      var defaultValidElements = '-strong/b,-em/i,-u,-span,-p,-ol,-ul,-li,-h1,-h2,-h3,-h4,-h5,-h6,' + '-p/div,-a[href|name],sub,sup,strike,br,del,table[width],tr,' + 'td[colspan|rowspan|width],th[colspan|rowspan|width],thead,tfoot,tbody';
+      return editor.getParam('paste_word_valid_elements', defaultValidElements);
+    };
+    var shouldConvertWordFakeLists = function (editor) {
+      return editor.getParam('paste_convert_word_fake_lists', true);
+    };
+    var shouldUseDefaultFilters = function (editor) {
+      return editor.getParam('paste_enable_default_filters', true);
+    };
+    var getValidate = function (editor) {
+      return editor.getParam('validate');
+    };
+    var getAllowHtmlDataUrls = function (editor) {
+      return editor.getParam('allow_html_data_urls', false, 'boolean');
+    };
+    var getPasteDataImages = function (editor) {
+      return editor.getParam('paste_data_images', false, 'boolean');
+    };
+    var getImagesDataImgFilter = function (editor) {
+      return editor.getParam('images_dataimg_filter');
+    };
+    var getImagesReuseFilename = function (editor) {
+      return editor.getParam('images_reuse_filename');
+    };
+    var getForcedRootBlock = function (editor) {
+      return editor.getParam('forced_root_block');
+    };
+    var getForcedRootBlockAttrs = function (editor) {
+      return editor.getParam('forced_root_block_attrs');
+    };
+    var getTabSpaces = function (editor) {
+      return editor.getParam('paste_tab_spaces', 4, 'number');
+    };
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
 
     var internalMimeType = 'x-tinymce/html';
     var internalMark = '<!-- ' + internalMimeType + ' -->';
@@ -294,6 +577,8 @@
     var internalHtmlMime = function () {
       return internalMimeType;
     };
+
+    var global$5 = tinymce.util.Tools.resolve('tinymce.util.Tools');
 
     var global$6 = tinymce.util.Tools.resolve('tinymce.html.Entities');
 
@@ -323,13 +608,13 @@
       var blocks = text.split(/\n\n/);
       var tagOpen = openContainer(rootTag, rootAttrs);
       var tagClose = '</' + rootTag + '>';
-      var paragraphs = global$4.map(blocks, function (p) {
+      var paragraphs = global$5.map(blocks, function (p) {
         return p.split(/\n/).join('<br />');
       });
       var stitch = function (p) {
         return tagOpen + p + tagClose;
       };
-      return paragraphs.length === 1 ? paragraphs[0] : global$4.map(paragraphs, stitch).join('');
+      return paragraphs.length === 1 ? paragraphs[0] : global$5.map(paragraphs, stitch).join('');
     };
     var convert = function (text, rootTag, rootAttrs) {
       return rootTag ? toBlockElements(text, rootTag === true ? 'p' : rootTag, rootAttrs) : toBRs(text);
@@ -338,11 +623,17 @@
     var global$7 = tinymce.util.Tools.resolve('tinymce.html.DomParser');
 
     var global$8 = tinymce.util.Tools.resolve('tinymce.html.Serializer');
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
+========
+
+    var nbsp = '\xA0';
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
 
     var global$9 = tinymce.util.Tools.resolve('tinymce.html.Node');
 
     var global$a = tinymce.util.Tools.resolve('tinymce.html.Schema');
 
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
     var shouldBlockDrop = function (editor) {
       return editor.getParam('paste_block_drop', false);
     };
@@ -391,6 +682,10 @@
 
     function filter$1(content, items) {
       global$4.each(items, function (v) {
+========
+    function filter$1(content, items) {
+      global$5.each(items, function (v) {
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
         if (v.constructor === RegExp) {
           content = content.replace(v, '');
         } else {
@@ -404,7 +699,7 @@
       var domParser = global$7({}, schema);
       var text = '';
       var shortEndedElements = schema.getShortEndedElements();
-      var ignoreElements = global$4.makeMap('script noscript style textarea video audio iframe object', ' ');
+      var ignoreElements = global$5.makeMap('script noscript style textarea video audio iframe object', ' ');
       var blockElements = schema.getBlockElements();
       function walk(node) {
         var name = node.name, currentNode = node;
@@ -468,17 +763,20 @@
         return prefix + count++;
       };
     }
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
     var isMsEdge = function () {
 // DC did this
 //      return domGlobals.navigator.userAgent.indexOf(' Edge/') !== -1;
     };
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
 
     function isWordContent(content) {
       return /<font face="Times New Roman"|class="?Mso|style="[^"]*\bmso-|style='[^'']*\bmso-|w:WordDocument/i.test(content) || /class="OutlineElement/.test(content) || /id="?docs\-internal\-guid\-/.test(content);
     }
     function isNumericList(text) {
-      var found, patterns;
-      patterns = [
+      var found;
+      var patterns = [
         /^[IVXLMCD]{1,2}\.[ \u00a0]/,
         /^[ivxlmcd]{1,2}\.[ \u00a0]/,
         /^[a-z]{1,2}[\.\)][ \u00a0]/,
@@ -488,7 +786,7 @@
         /^[\u58f1\u5f10\u53c2\u56db\u4f0d\u516d\u4e03\u516b\u4e5d\u62fe]+\.[ \u00a0]/
       ];
       text = text.replace(/^[\u00a0 ]+/, '');
-      global$4.each(patterns, function (pattern) {
+      global$5.each(patterns, function (pattern) {
         if (pattern.test(text)) {
           found = true;
           return false;
@@ -614,7 +912,7 @@
     function filterStyles(editor, validStyles, node, styleValue) {
       var outputStyles = {}, matches;
       var styles = editor.dom.parseStyle(styleValue);
-      global$4.each(styles, function (value, name) {
+      global$5.each(styles, function (value, name) {
         switch (name) {
         case 'mso-list':
           matches = /\w+ \w+([0-9]+)/i.exec(styleValue);
@@ -679,10 +977,15 @@
       return null;
     }
     var filterWordContent = function (editor, content) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       var retainStyleProperties, validStyles;
       retainStyleProperties = getRetainStyleProps(editor);
+========
+      var validStyles;
+      var retainStyleProperties = getRetainStyleProps(editor);
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       if (retainStyleProperties) {
-        validStyles = global$4.makeMap(retainStyleProperties.split(/[, ]/));
+        validStyles = global$5.makeMap(retainStyleProperties.split(/[, ]/));
       }
       content = filter$1(content, [
         /<br class="?Apple-interchange-newline"?>/gi,
@@ -709,7 +1012,7 @@
         valid_elements: validElements,
         valid_children: '-li[p]'
       });
-      global$4.each(schema.elements, function (rule) {
+      global$5.each(schema.elements, function (rule) {
         if (!rule.attributes.class) {
           rule.attributes.class = {};
           rule.attributesOrder.push('class');
@@ -781,7 +1084,11 @@
       if (shouldConvertWordFakeLists(editor)) {
         convertFakeListsToProperLists(rootNode);
       }
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       content = global$8({ validate: editor.settings.validate }, schema).serialize(rootNode);
+========
+      content = global$8({ validate: getValidate(editor) }, schema).serialize(rootNode);
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       return content;
     };
     var preProcess = function (editor, content) {
@@ -789,10 +1096,16 @@
     };
 
     var preProcess$1 = function (editor, html) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 //      var parser = global$7({}, editor.schema);
       var parser = global$7(editor.settings, editor.schema);
       parser.addNodeFilter('meta', function (nodes) {
         global$4.each(nodes, function (node) {
+========
+      var parser = global$7({}, editor.schema);
+      parser.addNodeFilter('meta', function (nodes) {
+        global$5.each(nodes, function (node) {
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
           return node.remove();
         });
       });
@@ -800,7 +1113,11 @@
         forced_root_block: false,
         isRootContent: true
       });
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       return global$8({ validate: editor.settings.validate }, editor.schema).serialize(fragment);
+========
+      return global$8({ validate: getValidate(editor) }, editor.schema).serialize(fragment);
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
     };
     var processResult = function (content, cancelled) {
       return {
@@ -809,13 +1126,19 @@
       };
     };
     var postProcessFilter = function (editor, html, internal, isWordHtml) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       var tempBody = editor.dom.create('div', { style: 'display:none' }, html);
       var postProcessArgs = firePastePostProcess(editor, tempBody, internal, isWordHtml);
       return processResult(postProcessArgs.node.innerHTML, postProcessArgs.isDefaultPrevented());
     };
     var filterContent = function (editor, content, internal, isWordHtml) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       var preProcessArgs = firePastePreProcess(editor, content, internal, isWordHtml);
       var filteredContent = preProcess$1(editor, preProcessArgs.content);
       if (editor.hasEventListeners('PastePostProcess') && !preProcessArgs.isDefaultPrevented()) {
@@ -831,14 +1154,20 @@
     };
 
     var pasteHtml = function (editor, html) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       editor.insertContent(html, {
         merge: shouldMergeFormats(editor),
         paste: true
       });
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 //DC did this
 		editor.nodeChanged();
 
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       return true;
     };
     var isAbsoluteUrl = function (url) {
@@ -848,6 +1177,7 @@
       return isAbsoluteUrl(url) && /.(gif|jpe?g|png)$/.test(url);
     };
     var createImage = function (editor, url, pasteHtmlFn) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 
       editor.undoManager.extra(function () {
         pasteHtmlFn(editor, url);
@@ -857,11 +1187,20 @@
 		editor.undoManager.transact( function () {
 			editor.selection.setContent( '<img src="' + url + '">' );
 		});
+========
+      editor.undoManager.extra(function () {
+        pasteHtmlFn(editor, url);
+      }, function () {
+        editor.insertContent('<img src="' + url + '">');
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       });
       return true;
     };
     var createLink = function (editor, url, pasteHtmlFn) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       editor.undoManager.extra(function () {
         pasteHtmlFn(editor, url);
       }, function () {
@@ -870,11 +1209,77 @@
       return true;
     };
     var linkSelection = function (editor, html, pasteHtmlFn) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
 
+      return editor.selection.isCollapsed() === false && isAbsoluteUrl(html) ? createLink(editor, html, pasteHtmlFn) : false;
+========
       return editor.selection.isCollapsed() === false && isAbsoluteUrl(html) ? createLink(editor, html, pasteHtmlFn) : false;
     };
     var insertImage = function (editor, html, pasteHtmlFn) {
+      return isImageUrl(html) ? createImage(editor, html, pasteHtmlFn) : false;
+    };
+    var smartInsertContent = function (editor, html) {
+      global$5.each([
+        linkSelection,
+        insertImage,
+        pasteHtml
+      ], function (action) {
+        return action(editor, html, pasteHtml) !== true;
+      });
+    };
+    var insertContent = function (editor, html, pasteAsText) {
+      if (pasteAsText || isSmartPasteEnabled(editor) === false) {
+        pasteHtml(editor, html);
+      } else {
+        smartInsertContent(editor, html);
+      }
+    };
 
+    var repeat = function (s, count) {
+      return count <= 0 ? '' : new Array(count + 1).join(s);
+    };
+
+    var isCollapsibleWhitespace = function (c) {
+      return ' \f\t\x0B'.indexOf(c) !== -1;
+    };
+    var isNewLineChar = function (c) {
+      return c === '\n' || c === '\r';
+    };
+    var isNewline = function (text, idx) {
+      return idx < text.length && idx >= 0 ? isNewLineChar(text[idx]) : false;
+    };
+    var normalizeWhitespace = function (editor, text) {
+      var tabSpace = repeat(' ', getTabSpaces(editor));
+      var normalizedText = text.replace(/\t/g, tabSpace);
+      var result = foldl(normalizedText, function (acc, c) {
+        if (isCollapsibleWhitespace(c) || c === nbsp) {
+          if (acc.pcIsSpace || acc.str === '' || acc.str.length === normalizedText.length - 1 || isNewline(normalizedText, acc.str.length + 1)) {
+            return {
+              pcIsSpace: false,
+              str: acc.str + nbsp
+            };
+          } else {
+            return {
+              pcIsSpace: true,
+              str: acc.str + ' '
+            };
+          }
+        } else {
+          return {
+            pcIsSpace: isNewLineChar(c),
+            str: acc.str + c
+          };
+        }
+      }, {
+        pcIsSpace: false,
+        str: ''
+      });
+      return result.str;
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
+    };
+    var insertImage = function (editor, html, pasteHtmlFn) {
+
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       return isImageUrl(html) ? createImage(editor, html, pasteHtmlFn) : false;
     };
     var smartInsertContent = function (editor, html) {
@@ -930,6 +1335,8 @@
       return result.str;
     };
 
+========
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
     var doPaste = function (editor, content, internal, pasteAsText) {
       var args = process(editor, content, internal);
       if (args.cancelled === false) {
@@ -942,8 +1349,13 @@
     };
     var pasteText = function (editor, text) {
       var encodedText = editor.dom.encode(text).replace(/\r\n/g, '\n');
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       var normalizedText = normalizeWhitespace(encodedText);
       var html = convert(normalizedText, editor.settings.forced_root_block, editor.settings.forced_root_block_attrs);
+========
+      var normalizedText = normalizeWhitespace(editor, encodedText);
+      var html = convert(normalizedText, getForcedRootBlock(editor), getForcedRootBlockAttrs(editor));
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
       doPaste(editor, html, false, true);
     };
     var getDataTransferItems = function (dataTransfer) {
@@ -972,8 +1384,12 @@
       return items;
     };
     var getClipboardContent = function (editor, clipboardEvent) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       var content = getDataTransferItems(clipboardEvent.clipboardData || editor.getDoc().dataTransfer);
       return isMsEdge() ? global$4.extend(content, { 'text/html': '' }) : content;
+========
+      return getDataTransferItems(clipboardEvent.clipboardData || editor.getDoc().dataTransfer);
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
     };
     var hasContentType = function (clipboardContent, mimeType) {
       return mimeType in clipboardContent && clipboardContent[mimeType].length > 0;
@@ -995,8 +1411,9 @@
         };
       }
     };
-    var isValidDataUriImage = function (settings, imgElm) {
-      return settings.images_dataimg_filter ? settings.images_dataimg_filter(imgElm) : true;
+    var isValidDataUriImage = function (editor, imgElm) {
+      var filter = getImagesDataImgFilter(editor);
+      return filter ? filter(imgElm) : true;
     };
     var extractFilename = function (editor, str) {
 
@@ -1007,10 +1424,10 @@
     var pasteImage = function (editor, imageItem) {
       var _a = parseDataUri(imageItem.uri), base64 = _a.data, type = _a.type;
       var id = uniqueId();
-      var name = editor.settings.images_reuse_filename && imageItem.blob.name ? extractFilename(editor, imageItem.blob.name) : id;
+      var name = getImagesReuseFilename(editor) && imageItem.blob.name ? extractFilename(editor, imageItem.blob.name) : id;
       var img = new domGlobals.Image();
       img.src = imageItem.uri;
-      if (isValidDataUriImage(editor.settings, img)) {
+      if (isValidDataUriImage(editor, img)) {
         var blobCache = editor.editorUpload.blobCache;
         var blobInfo = void 0;
         var existingBlobInfo = blobCache.getByData(base64, type);
@@ -1055,7 +1472,7 @@
     };
     var pasteImageData = function (editor, e, rng) {
       var dataTransfer = isClipboardEvent(e) ? e.clipboardData : e.dataTransfer;
-      if (editor.settings.paste_data_images && dataTransfer) {
+      if (getPasteDataImages(editor) && dataTransfer) {
         var images = getImagesFromDataTransfer(dataTransfer);
         if (images.length > 0) {
           e.preventDefault();
@@ -1077,7 +1494,7 @@
       return domGlobals.navigator.userAgent.indexOf('Android') !== -1 && clipboardData && clipboardData.items && clipboardData.items.length === 0;
     };
     var isKeyboardPasteEvent = function (e) {
-      return global$5.metaKeyPressed(e) && e.keyCode === 86 || e.shiftKey && e.keyCode === 45;
+      return global$4.metaKeyPressed(e) && e.keyCode === 86 || e.shiftKey && e.keyCode === 45;
     };
     var registerEventHandlers = function (editor, pasteBin, pasteFormat) {
       var keyboardPasteEvent = value();
@@ -1112,7 +1529,11 @@
         }
       });
       function insertClipboardContent(clipboardContent, isKeyBoardPaste, plainTextMode, internal) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
         var content, isPlainTextHtml, isImage;
+========
+        var content;
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
         if (hasContentType(clipboardContent, 'text/html')) {
           content = clipboardContent['text/html'];
         } else {
@@ -1124,8 +1545,13 @@
         }
         content = trimHtml(content);
         pasteBin.remove();
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
         isPlainTextHtml = internal === false && isPlainText(content);
         isImage = isImageUrl(content);
+========
+        var isPlainTextHtml = internal === false && isPlainText(content);
+        var isImage = isImageUrl(content);
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
         if (!content.length || isPlainTextHtml && !isImage) {
           plainTextMode = true;
         }
@@ -1207,7 +1633,7 @@
         var isDataUri = function (src) {
           return src.indexOf('data:') === 0;
         };
-        if (!editor.settings.paste_data_images && isPasteInsert(args)) {
+        if (!getPasteDataImages(editor) && isPasteInsert(args)) {
           var i = nodes.length;
           while (i--) {
             src = nodes[i].attr('src');
@@ -1216,7 +1642,7 @@
             }
             if (isWebKitFakeUrl(src)) {
               remove(nodes[i]);
-            } else if (!editor.settings.allow_html_data_urls && isDataUri(src)) {
+            } else if (!getAllowHtmlDataUrls(editor) && isDataUri(src)) {
               remove(nodes[i]);
             }
           }
@@ -1241,9 +1667,8 @@
     };
     var create = function (editor, lastRngCell, pasteBinDefaultContent) {
       var dom = editor.dom, body = editor.getBody();
-      var pasteBinElm;
       lastRngCell.set(editor.selection.getRng());
-      pasteBinElm = editor.dom.add(getPasteBinParent(editor), 'div', {
+      var pasteBinElm = editor.dom.add(getPasteBinParent(editor), 'div', {
         'id': 'mcepastebin',
         'class': 'mce-pastebin',
         'contentEditable': true,
@@ -1278,21 +1703,20 @@
       return editor.dom.get('mcepastebin');
     };
     var getHtml = function (editor) {
-      var pasteBinElm, pasteBinClones, i, dirtyWrappers, cleanWrapper;
       var copyAndRemove = function (toElm, fromElm) {
         toElm.appendChild(fromElm);
         editor.dom.remove(fromElm, true);
       };
-      pasteBinClones = global$4.grep(getPasteBinParent(editor).childNodes, function (elm) {
+      var pasteBinClones = global$5.grep(getPasteBinParent(editor).childNodes, function (elm) {
         return elm.id === 'mcepastebin';
       });
-      pasteBinElm = pasteBinClones.shift();
-      global$4.each(pasteBinClones, function (pasteBinClone) {
+      var pasteBinElm = pasteBinClones.shift();
+      global$5.each(pasteBinClones, function (pasteBinClone) {
         copyAndRemove(pasteBinElm, pasteBinClone);
       });
-      dirtyWrappers = editor.dom.select('div[id=mcepastebin]', pasteBinElm);
-      for (i = dirtyWrappers.length - 1; i >= 0; i--) {
-        cleanWrapper = editor.dom.create('div');
+      var dirtyWrappers = editor.dom.select('div[id=mcepastebin]', pasteBinElm);
+      for (var i = dirtyWrappers.length - 1; i >= 0; i--) {
+        var cleanWrapper = editor.dom.create('div');
         pasteBinElm.insertBefore(cleanWrapper, dirtyWrappers[i]);
         copyAndRemove(cleanWrapper, dirtyWrappers[i]);
       }
@@ -1362,7 +1786,11 @@
     };
 
     var hasWorkingClipboardApi = function (clipboardData) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       return global$1.iOS === false && clipboardData !== undefined && typeof clipboardData.setData === 'function' && isMsEdge() !== true;
+========
+      return global$1.iOS === false && typeof (clipboardData === null || clipboardData === void 0 ? void 0 : clipboardData.setData) === 'function';
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
     };
     var setHtml5Clipboard = function (clipboardData, html, text) {
       if (hasWorkingClipboardApi(clipboardData)) {
@@ -1431,7 +1859,6 @@
     var cut = function (editor) {
       return function (evt) {
         if (hasSelectedContent(editor)) {
-debugger;
           setClipboardData(evt, getData(editor), fallback(editor), function () {
             if (global$1.browser.isChrome()) {
               var rng_1 = editor.selection.getRng();
@@ -1448,7 +1875,6 @@ debugger;
     };
     var copy = function (editor) {
       return function (evt) {
-debugger;
         if (hasSelectedContent(editor)) {
           setClipboardData(evt, getData(editor), fallback(editor), function () {
           });
@@ -1489,12 +1915,22 @@ debugger;
         });
       }
       editor.on('drop', function (e) {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
         var dropContent, rng;
         rng = getCaretRangeFromEvent(editor, e);
-        if (e.isDefaultPrevented() || draggingInternallyState.get()) {
+// DC did this to enable filtering on drop
+//        if (e.isDefaultPrevented() || draggingInternallyState.get()) {
+        if (e.isDefaultPrevented() ) {
           return;
         }
         dropContent = clipboard.getDataTransferItems(e.dataTransfer);
+========
+        var rng = getCaretRangeFromEvent(editor, e);
+        if (e.isDefaultPrevented() || draggingInternallyState.get()) {
+          return;
+        }
+        var dropContent = clipboard.getDataTransferItems(e.dataTransfer);
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
         var internal = clipboard.hasContentType(dropContent, internalHtmlMime());
         if ((!clipboard.hasHtmlOrText(dropContent) || isPlainTextFileUrl(dropContent)) && clipboard.pasteImageData(e, rng)) {
           return;
@@ -1565,7 +2001,7 @@ debugger;
         return html;
       }
       var blockElements = [];
-      global$4.each(editor.schema.getBlockElements(), function (block, blockName) {
+      global$5.each(editor.schema.getBlockElements(), function (block, blockName) {
         blockElements.push(blockName);
       });
       var explorerBlocksRegExp = new RegExp('(?:<br>&nbsp;[\\s\\r\\n]+|<br>)*(<\\/?(' + blockElements.join('|') + ')[^>]*>)(?:<br>&nbsp;[\\s\\r\\n]+|<br>)*', 'g');
@@ -1681,7 +2117,11 @@ debugger;
     };
 
     function Plugin () {
+<<<<<<<< HEAD:custom_plugins/mediawiki/plugins/mw_wikipaste/plugin.js
       global.add('wikipaste', function (editor) {
+========
+      global.add('paste', function (editor) {
+>>>>>>>> upstream/master:tinymce/plugins/paste/plugin.js
         if (hasProPlugin(editor) === false) {
           var draggingInternallyState = Cell(false);
           var pasteFormat = Cell(isPasteAsTextEnabled(editor) ? 'text' : 'html');
