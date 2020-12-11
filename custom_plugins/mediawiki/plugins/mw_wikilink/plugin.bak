@@ -18,9 +18,9 @@ var wikilink = function (editor) {
     var pluginManager = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
 	var editor = tinymce.activeEditor;
-
+	
 	var utility = editor.getParam("wiki_utility");
-
+	
 	var setContent = utility.setContent;
 
 	var setSelection = utility.setSelection;
@@ -32,7 +32,7 @@ var wikilink = function (editor) {
 	var htmlDecode = utility.htmlDecode;
 
 	var translate = utility.translate;
-
+	
 	var toggleEnabledState = utility.toggleEnabledState;
 
 	var unlink = function ( editor ) {
@@ -54,7 +54,6 @@ var wikilink = function (editor) {
 	};
 
 	var open = function ( editor ) {
-
 		var selectedNode = editor.selection.getNode(),
 			dataType = '',
 			isWikiLink = '',
@@ -67,17 +66,12 @@ var wikilink = function (editor) {
 			dialogItems,
 			initialData;
 
-      var nwz = selectedNode.closest('.newwin');
-
-console.log(editor.selection.getNode());
-
-
 		if (typeof(selectedNode.attributes["data-mwt-type"]) !== "undefined" ) {
 			aClass = selectedNode.attributes["class"].value;
 			dataType = selectedNode.attributes["data-mwt-type"].value;
-			isWikiLink =
-				dataType == "internallink" ||
-				dataType == "externallink" ;
+			isWikiLink = 
+				dataType == "internallink" || 
+				dataType == "externallink" ;	
 		}
 
 		if (isWikiLink) {
@@ -105,7 +99,7 @@ console.log(editor.selection.getNode());
 				value = value.replace(/^\[(.*?)\](\w*)/, function (match, $1, $2) {
 					// $1 = content of the link
 					// $2 = link trail value)
-
+					
 					linkParts = $1.split(" ");
 					aLink = linkParts[0];
 					if (linkParts.length > 1) {
@@ -140,21 +134,20 @@ console.log(editor.selection.getNode());
 				type: 'selectbox',
 				label: translate("tinymce-link-type-label"),
 				items: [
-					{text: translate("tinymce-link-type-internal"), value: 'mwt-nonEditable mwt-wikiMagic mwt-internallink'},
 					{text: translate("tinymce-link-type-external"), value: 'mwt-nonEditable mwt-wikiMagic mwt-externallink'},
+					{text: translate("tinymce-link-type-internal"), value: 'mwt-nonEditable mwt-wikiMagic mwt-internallink'},
 				]
 			};
-
+	
 			// for inputing the target location of the link
 			var linkCtrl = {
 				name: 'href',
 				type: 'input',
-        placeholder: 'Type the name of the page to link to',
 				label: translate("tinymce-link-url-page-label"),
 				inputMode: 'text',
 				maximized: true,
-    	};
-
+			};
+	
 			// for inputing any alternative text for the link which is displayed on the page
 			var labelCtrl = {
 				name: 'text',
@@ -163,29 +156,7 @@ console.log(editor.selection.getNode());
 				inputMode: 'text',
 				maximized: true,
 			};
-      if(nwz){
-
-var order = [
-  {text: "_blank" , value: 'mwt-target-blank'},
-{text: "_self", value: 'mwt-target-self'},
-
-];
-
-}else{
-  var order = [
-    {text: "_self", value: 'mwt-target-self'},
-    {text: "_blank" , value: 'mwt-target-blank'},
-
-  ];
-
-}
-      var targetListCtrl = {
-				name: 'target',
-				type: 'selectbox',
-				label: "Link target",
-				items: order
-			};
-
+	
 			// for updating any link trails (see https://www.mediawiki.org/wiki/Help:Links)for the link
 			var trailCtrl = {
 				name: 'trail',
@@ -194,22 +165,20 @@ var order = [
 				inputMode: 'text',
 				maximized: true,
 			};
-
+			
 			var initialDialogItems = [
 				classListCtrl,
 				linkCtrl,
-				labelCtrl,
-        targetListCtrl
+				labelCtrl
 			];
-
+	
 			var linkTrailDialogItems = [
 				classListCtrl,
 				linkCtrl,
 				labelCtrl,
-        targetListCtrl,
 				trailCtrl
 			];
-
+			
 			if ( initialData.trail ) {
 				dialogItems = linkTrailDialogItems;
 			} else {
@@ -217,7 +186,7 @@ var order = [
 			}
 
 			return {
-				type: 'panel',
+				type: 'panel', 
 				items: dialogItems
 			};
 		};
@@ -236,125 +205,7 @@ var order = [
 			}
 		];
 
-    var autocompletebox = false;
-    var fakeinput = false;
-
 		var dialogChange = function( api, changed ) {
-      var formGroup = document.querySelector('.tox-form .tox-form__group:nth-child(2)');
-      if(changed.name == 'href'){
-        var obj = api.getData()
-        if(obj.class == 'mwt-nonEditable mwt-wikiMagic mwt-internallink'){
-            if(!autocompletebox){
-              var fakeinput =  document.createElement('input');
-
-
-              //add autocomplete dropdown
-              autocompletebox = document.createElement('div');
-              autocompletebox.classList.add('autocompletebox');
-              autocompletebox.classList.add('icon-list');
-              autocompletebox.classList.add('dropdown-menu');
-              autocompletebox.classList.add('d-block');
-              autocompletebox.addEventListener('click', function(e){
-                formGroup.querySelector('input').value = e.target.getAttribute('data-value');
-                fakeinput.value = e.target.innerText;
-                //remove autocomplete dropdown
-                autocompletebox.innerHTML = "";
-              }, false)
-
-
-
-              fakeinput.type = 'text';
-              fakeinput.id = 'fakeinput';
-              fakeinput.classList.add('tox-textfield')
-              fakeinput.value = formGroup.querySelector('input').value;
-              formGroup.appendChild(fakeinput)
-              fakeinput.focus()
-              formGroup.appendChild(autocompletebox)
-
-              fakeinput.addEventListener('input', function(e){
-
-
-               // fill autocomplete dropdown
-               var params = {
-  		 action: 'ask',
-  		 query: '[[Class::Page]][[Title::~*'+fakeinput.value+'*]]|?Title|?Home.Name|?Page ID|sort=es.score|limit=20|order=desc',
-  		 format: 'json'
-  		},
-  		api = new mw.Api();//need to add fail function
-
-  		api.postWithToken( 'csrf', params ).done( function ( data ) {
-
-            autocompletebox.innerHTML = "";
-            var more = false;
-            Object.entries(data.query.results).forEach(function(value){
-              more = true;
-              var opt = document.createElement('li');
-              opt.classList.add('dropdown-item')
-              var nsp = "";
-              if(value[1].printouts.Name && value[1].printouts.Name[0] && value[1].printouts.Name[0].fulltext){
-                nsp = value[1].printouts.Name[0].fulltext;
-              }
-              var tx = nsp+':'+value[1].printouts.Title[0].fulltext;
-              var regex = new RegExp( fakeinput.value , 'gmi' );
-              opt.innerHTML = tx.replace(regex , '<b>'+fakeinput.value+'</b>');
-              opt.setAttribute('data-value', value[1].printouts['Page ID'][0]);
-              autocompletebox.appendChild(opt);
-              console.log(value)
-            })
-
-            if(!more){
-               var opt = document.createElement('li');
-              opt.innerText = "No results";
-              opt.setAttribute('data-value', "");
-              autocompletebox.appendChild(opt);
-            }
-
-          })
-
-
-})
-  }
-  var  fakeinput =  document.querySelector('#fakeinput')
-
-  fakeinput.classList.remove('d-none');
-  fakeinput.focus();
-  formGroup.querySelector('input').classList.add('d-none');
-
-}
-
-
-      }else{
-
-        if(autocompletebox ){
-
-          //remove autocomplete dropdown
-          autocompletebox.innerHTML = "";
-
-        }
-      }
-      if(changed.name == 'class'){
-        var obj = api.getData()
-        if(obj.class != 'mwt-nonEditable mwt-wikiMagic mwt-internallink'){
-          console.log('ex');
-          var  fakeinput =  document.querySelector('#fakeinput');
-          if(fakeinput){
-          fakeinput.classList.add('d-none')
-          formGroup.querySelector('input').classList.remove('d-none');
-
-        }
-
-
-        }
-
-        if(autocompletebox ){
-
-
-        autocompletebox.innerHTML = "";
-
-
-          //remove autocomplete dropdown
-        }
-      }
 		};
 
 		var dialogSubmit = function (api) {
@@ -376,7 +227,6 @@ var order = [
 			}
 
 			function insertLink(data) {
-        console.log(data)
 				//Trim left and right everything (including linebreaks) that is not a starting or ending link code
 				//This is necessary to avoid the wikicode parser from breaking the markup
 				var href,
@@ -384,15 +234,13 @@ var order = [
 					aLabel,
 					aTrail,
 					wikitext = '',
-          aTarget,
-          aTargetTail,
 					args;
 
 				//first layer of '[...]' //external-, file- and mailto- links
-				href = data.href.replace(/(^.*?\[|\].*?$|\r\n|\r|\n)/gm, '');
-
+				href = data.href.replace(/(^.*?\[|\].*?$|\r\n|\r|\n)/gm, ''); 
+				
 				//potential second layer of '[[...]]' //internal and interwiki links
-				href = href.replace(/(^.*?\[|\].*?$|\r\n|\r|\n)/gm, '');
+				href = href.replace(/(^.*?\[|\].*?$|\r\n|\r|\n)/gm, ''); 
 				aLink = href;
 				aLabel = htmlDecode(data.text).replace("_"," ");
 
@@ -401,35 +249,27 @@ var order = [
 				} else {
 					aTrail = '';
 				}
-
-        if (data.target && data.target == "mwt-target-blank") {
-					aTarget = "<span class='newwin'>";
-          aTargetTail = "</span>";
-				} else {
-					aTarget = '';
-          aTargetTail = '';
-				}
-
-				if (data["class"].indexOf("mwt-internallink") > -1){
+			
+				if (data["class"].indexOf("mwt-internallink") > -1){ 
 						aLink = aLink.replace("_"," ");
 					if (aLabel) {
-						wikitext = aTarget + "[[" + aLink + "|" + aLabel + "]]" + aTargetTail + aTrail;
+						wikitext = "[[" + aLink + "|" + aLabel + "]]" + aTrail;
 					} else {
-						wikitext = aTarget + "[[" + aLink + "]]" + aTargetTail + aTrail;
+						wikitext = "[[" + aLink + "]]" + aTrail;			
 					}
 				} else if (data["class"].indexOf("mwt-externallink") > -1) {
 					if (aLabel) {
-						wikitext = aTarget + "[" + aLink + " " + aLabel + "]" + aTargetTail + aTrail;
+						wikitext = "[" + aLink + " " + aLabel + "]" + aTrail;
 					} else {
-						wikitext = aTarget + "[" + aLink + "]" + aTargetTail + aTrail;
+						wikitext = "[" + aLink + "]" + aTrail;
 					}
 				}
-
+				
 				args = {format: 'wiki', mode: 'inline', convert2html: true};
 //0929				setSelection( editor, wikitext, args );
 				editor.insertContent(wikitext, args );
 				editor.focus( );
-				editor.nodeChanged();
+				editor.nodeChanged();	
 			}
 
 			newData = api.getData();
@@ -461,7 +301,7 @@ var order = [
 				href.substr(0,2) === "//" ) {
 				hasUrl = true;
 			}
-
+			
 			if ((newData["class"].indexOf("mwt-externallink") > -1) &&
 				(editor.settings.link_assume_external_targets && !hasUrl)) {
 				delayedConfirm(
@@ -470,7 +310,7 @@ var order = [
 						if (state) {
 							newData.href = '//' + encodeURI(newData.href);
 							insertLink( newData );
-
+							
 							api.close();
 						}
 					}
@@ -481,7 +321,7 @@ var order = [
 			insertLink( newData );
 			api.close();
 		};
-
+		
 		editor.windowManager.open({
 			title: translate('tinymce-link-title'),
 			size: 'normal',
@@ -501,7 +341,7 @@ var order = [
 			unlink( editor );
 		});
 	};
-
+	
 	var registerKeys = function ( editor ) {
 		editor.ui.registry.addButton( 'wikilink', {
 			icon: 'link',

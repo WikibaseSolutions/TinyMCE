@@ -40,7 +40,6 @@
 	var registerButtons = function (editor) {
 		editor.ui.registry.addButton('nonbreaking', {
 			icon: 'non-breaking',
-			shortcut: 'Meta+K' + 32,
 			tooltip: translate( 'tinymce-nonbreaking-insertNonBreakingSpace' ),
 			onAction: function () {
 				return editor.execCommand('mwt-nonBreaking');
@@ -52,9 +51,6 @@
 			onAction: function () {
 				return editor.execCommand('mwt-nonBreaking');
 			}
-		});
-		editor.shortcuts.add('Meta+' + 32, 'insert non breaking space', function () {
-			editor.execCommand('mwt-nonBreaking');
 		});
 	};
 

@@ -27,10 +27,6 @@ thead{
     text-align: center;
 }
 
-.client-nojs #ca-ve-edit, .client-nojs .mw-editsection-divider, .client-nojs .mw-editsection-visualeditor, .ve-not-available #ca-ve-edit, .ve-not-available .mw-editsection-divider, .ve-not-available .mw-editsection-visualeditor {
-	display: initial;
-}
-
 .mceEditable {
 	border: 1px dotted #0000cc;
 }
@@ -90,21 +86,12 @@ div.mwt-unknown {
 	display: inline-block;
 }
 
-.mwt-externallink {
-	display: inline-block;
-}
-
-.mwt-internallink {
-	display: inline-block;
-}
-
 .mwt-showPlaceholder.mwt-singleLinebreak {
 	display: inline-block;
 }
 
 .mwt-hidePlaceholder.mwt-singleLinebreak {
-/*	display: none;*/
-	visibility: hidden
+	display: none;
 }
 
 .mwt-showPlaceholder.mwt-slbltr:before {
@@ -112,7 +99,7 @@ div.mwt-unknown {
 }
 
 .mwt-hidePlaceholder.mwt-slbltr:before {
-/*	content:  "\00A0";*/
+	content:  "\00A0";
 }
 
 .mwt-showPlaceholder.mwt-slbrtl:before {
@@ -120,19 +107,11 @@ div.mwt-unknown {
 }
 
 .mwt-hidePlaceholder.mwt-slbrtl:before {
-/*	content:  "\00A0";*/
+	content:  "\00A0";
 }
 
-/*.mwt-showPlaceholder.mwt-comment:before {
+.mwt-showPlaceholder.mwt-comment:before {
 	content:  "\1F4AC";
-}
-
-.mwt-hidePlaceholder.mwt-comment {
- 	display:  none;
-}*/
-
-.mwt-showPlaceholder.mwt-comment {
- 	display:  inline;
 }
 
 .mwt-hidePlaceholder.mwt-comment {
@@ -141,6 +120,10 @@ div.mwt-unknown {
 
 .mwt-showPlaceholder.mwt-switch:before {
 	content:  "\00A7";
+}
+
+.mwt-hidePlaceholder.mwt-comment {
+	display:  none;
 }
 
 .mwt-showPlaceholder.mwt-image:before {
@@ -177,52 +160,19 @@ div.mwt-unknown {
 	content:  "\00A0";
 }
 
-/*.mwt-showPlaceholder.mwt-reference::before {
-  content: "[\00A0";
+.mwt-showPlaceholder.mwt-reference::before {
+  content: "[\2021\00A0";
   color: red;
 }
 
 .mwt-showPlaceholder.mwt-reference::after {
 	content: "\00A0]";
 	color: red;
-}*/
+}
 
 .mwt-hidePlaceholder.mwt-reference {
 	display:  none;
 }
-
-.mwt-hidePlaceholder.mwt-comment {
-	display:  none;
-}
-
-.mwt-hidePlaceholder.mwt-commentHolder{
-	display:  none;
-}
-
-.mwt-reference {
-	display:  none;
-}
-
-.mwt-comment {
-	display:  none;
-}
-
-.mwt-showReference {
-/*	display:  inline;*/
- 	display:  inline-block;
-}
-
-/*.mwt-showReference::before {
-  content: "[\00A0";
-  color: red;
-}
-
-.mwt-showReference::after {
-	content: "\00A0]";
-	color: red;
-}*/
-
-
 
 .mwt-nonEditable {
 /*	display: inline-block;*/
@@ -269,17 +219,7 @@ div.mwt-unknown {
 }
 
 .mwt-hidePlaceholder.mwt-nonEditable.mwt-placeHolder {
-/*	padding: 2px;*/
-	position: relative;
-}
-
-.mwt-nowiki {
-/*    background-color: #f8f9fa;*/
-    border: 1px solid #eaecf0;
-    border-radius: 2px;
-	display: inline-block;
-	padding: 1px;
-	opacity: 1.7 !important;
+	padding: 2px;
 	position: relative;
 }
 
@@ -340,83 +280,6 @@ pre {
     white-space: pre-wrap;
 }
 
-.mwt-referenceHolder::before {
-	display: inline-block;
-	content:  "[n]";
-	vertical-align:super;  
-	font-size: small; 
-}
-
-.mwt-referenceHolder {
-	display: inline-block;
-	color: inherit;
-    background-color: inherit;
-    border: none;
-	margin: 0px;
-    line-height: inherit;
-    white-space: pre-wrap;
-    padding: inherit;
-}
-
-.mwt-reference.mwt-showReference {
-	display: inline-block;
-	color: inherit;
-    background-color: #f8f9fa;;
-    border:  1px solid red;
-	margin: 4px;
-    line-height: inherit;
-    white-space: pre-wrap;
-    padding: 4px;
-}
-
-.mwt-reference {
-	color: inherit;
-    background-color: inherit;
-    border: none;
-	margin: 0px;
-    line-height: inherit;
-    white-space: pre-wrap;
-    padding: inherit;
-}
-
-.mwt-commentHolder::before {
-	content:  "\1F4AC";
-	vertical-align:super;  
-	font-size: small; 
-}
-
-.mwt-commentHolder {
-	display: inline-block;
-	color: inherit;
-    background-color: inherit;
-    border: none;
-	margin: 0px;
-    line-height: inherit;
-    white-space: pre-wrap;
-    padding: inherit;
-}
-
-.mwt-comment.mwt-showReference {
-	display: inline-block;
-	color: inherit;
-    background-color: #f8f9fa;;
-    border:  1px solid red;
-	margin: 4px;
-    line-height: inherit;
-    white-space: pre-wrap;
-    padding: 4px;
-}
-
-.mwt-comment {
-	color: inherit;
-    background-color: inherit;
-    border: none;
-	margin: 0px;
-    line-height: inherit;
-    white-space: pre-wrap;
-    padding: inherit;
-}
-
 code {
     color: #000;
     background-color: #f8f9fa;
@@ -428,15 +291,6 @@ code {
 
 nowiki {
 	content: "<nowiki />"
-}
-
-.mw-references-wrap {
-	pointer-events:none !important;;
-    background-color: #f8f9fa;
-    border: 1px solid #eaecf0;
-    border-radius: 2px;
-    padding: 1px 4px;
-	opacity: 0.7 !important;
 }
 
 div.mce-throbber{

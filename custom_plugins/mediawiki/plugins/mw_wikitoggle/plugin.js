@@ -29,6 +29,7 @@ var wikitoggle = function (editor) {
 
 		editor.settings.showPlaceholders = !showPlaceholders;
 
+//		var test =	editor.dom.select('span.mwt-placeHolder').forEach( function(a) {
 		var test =	editor.dom.select('.mwt-placeHolder').forEach( function(a) {
 				$(a).toggleClass( "mwt-showPlaceholder", !showPlaceholders );
 				$(a).toggleClass( "mwt-hidePlaceholder", showPlaceholders );

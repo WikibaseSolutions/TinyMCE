@@ -62,16 +62,8 @@
 	
 		var translate = utility.translate;
 
-		var debug = utility.debug;
-
 		/**
 		 *
-		 * Flags if html entities need to be decoded on the input
-		 * @type String
-		 */
-		var _decodeHtmlEntitiesOnInput = editor.getParam("decodeHtmlEntitiesOnInput");
-
-		/*
 		 * Points to the mediawiki API for this wiki
 		 * @type String
 		 */
@@ -144,21 +136,6 @@
 
 		/**
 		 *
-		 * classes used to identify edit part of a template.  If this is so the pipe
-		 * characters are converted to {{!}} unless they are part of a template call themselves
-		 * @type Array
-		 */
-		_mwtTemplateClasses = editor.getParam("mediawikiTemplateClasses"),
-
-		/**
-		 *
-		 * flags used to determine which debug logs are active
-		 * @type Array
-		 */
-		_mwtDebugFlags = editor.getParam("tinyMCEDebugFlags"),
-
-		/**
-		 *
 		 * Flag used for toggling visible placeholders on or off and
 		 * variable containing initial class value for the placeholders
 		 *
@@ -174,7 +151,7 @@
 		 * default '|'
 		 * @type String
 		 */
-		_pipeText,
+		_pipeText = ($(editor.targetElm).hasClass('mcePartOfTemplate')) ? '{{!}}' : '|',
 
 		/**
 		 *
@@ -300,29 +277,6 @@
 	var pluginManager = tinymce.util.Tools.resolve('tinymce.PluginManager');
 
 	/**
-	 * Ensures text conforms to TinyMCE schema including any changes
-	 * to the valid elements
-	 *
-	 * @param {String} text
-	 * @returns {String}
-	 */
-	function _sanitize( text ) {
-		var serializer = new tinymce.html.Serializer(),
-//			parser = editor.parser;
-			parser = new tinymce.html.DomParser({validate: false});
-
-		if (text == '' ) return text;
-		text = "<div id='tinywrapper'>" + text + "</div>";
-		text = text.replace(/\n/gmi, '{@@vnl@@}');	
-		text = serializer.serialize( parser.parse( text ) );
-		text = text.replace(/<p class="mwt-paragraph">{@@vnl@@}<\/p>/gmi, '\n');	
-		text = text.replace(/{@@vnl@@}/gmi, '\n');	
-		text = text.replace(/^<div id=('|")tinywrapper\1>([^]*)<\/div>$/m, '$2');	
-
-		return text;
-	}
-
-	/**
 	 * find the offset of the cursor within the displayed text
 	 *
 	 * @param {String} text
@@ -333,37 +287,25 @@
 			text,
 			bm,
 			index,
-			parents = {},
-			parentsPreviousSibling = {},
-			rootNode = editor.getBody(),
 			currentNode,
-			previousNode = null,
-			nextNode = null,
+			previousNode,
+			nextNode,
 			firstNode = false;
 
 		currentNode = editor.selection.getNode()
 		previousNode = currentNode.previousSibling;
-		nextNode = currentNode.nextSibling;
-		parents = editor.dom.getParents( currentNode)
 		if ( !previousNode ) {
-			tinymce.each( parents , function( aParent ) {
-				if ( aParent == rootNode ) return false;
-				if ( aParent.previousSibling ) {
-					previousNode = aParent.previousSibling;
-					return false
-				}
+			previousNode = editor.dom.getParent( currentNode, function ( aParent) {
+				return aParent.previousSiblineg
 			});
 		}
+		nextNode = currentNode.nextSibling;
 		if ( !nextNode ) {
-			tinymce.each( parents , function( aParent ) {
-				if ( aParent == rootNode ) return false;
-				if ( aParent.nextSibling ) {
-					nextNode = aParent.nextSibling;
-					return false
-				}
+			nextNode = editor.dom.getParent( currentNode, function ( aParent) {
+				return aParent.nextSiblineg
 			});
 		}
-		
+
 		bm = tinymce.activeEditor.selection.getBookmark();
 		range = editor.selection.getRng();
 		range.setStart(editor.getBody().firstChild, 0);
@@ -390,13 +332,13 @@
 		// sometimes the parameters have been &xxx; encoded.  We want
 		// to decode these where they are applied to placeholders so
 		// the replacement of placeholders that follows will work
-//		tagWikiText = tagWikiText.replace(/(&lt;@@@)/gmi, '{@@@');
-//		tagWikiText = tagWikiText.replace(/(@@@&gt;)/gmi, '@@@}');
+		tagWikiText = tagWikiText.replace(/(&lt;@@@)/gmi, '<@@@');
+		tagWikiText = tagWikiText.replace(/(@@@&gt;)/gmi, '@@@>');
 
 		// recover any placeholders embedded in tagWikiText
 		// some may be embedded in others so repeat until all gone
-		while (tagWikiText.match(/(\{@@@.*?:\d*@@@})/gmi)) {
-			tagWikiText = tagWikiText.replace(/(\{@@@.*?:\d*@@@})/gmi, function(match, $1) {
+		while (tagWikiText.match(/(\<@@@.*?:\d*@@@>)/gmi)) {
+			tagWikiText = tagWikiText.replace(/(\<@@@.*?:\d*@@@>)/gmi, function(match, $1) {
 
 				return _tags4Wiki[$1];
 			});
@@ -415,13 +357,13 @@
 		// sometimes the parameters have been &xxx; encoded.  We want
 		// to decode these where they are applied to placeholders so
 		// the replacement of placeholders that follows will work
-//		tagHTML = tagHTML.replace(/(&lt;@@@)/gmi, '{@@@');
-//		tagHTML = tagHTML.replace(/(@@@&gt;)/gmi, '@@@}');
+		tagHTML = tagHTML.replace(/(&lt;@@@)/gmi, '<@@@');
+		tagHTML = tagHTML.replace(/(@@@&gt;)/gmi, '@@@>');
 
 		// recover any placeholders embedded in tagHTML
 		// some may be embedded in others so repeat until all gone
-		while (tagHTML.match(/(\{@@@.*?:\d*@@@})/gmi)) {
-			tagHTML = tagHTML.replace(/(\{@@@.*?:\d*@@@})/gmi, function(match, $1) {
+		while (tagHTML.match(/(\<@@@.*?:\d*@@@>)/gmi)) {
+			tagHTML = tagHTML.replace(/(\<@@@.*?:\d*@@@>)/gmi, function(match, $1) {
 				// replace '&amp;amp;' with '&amp;' as we double escaped these when 
 				// they were converted
 				return _tags4Wiki[$1].replace(/&amp;amp;/gmi,'&amp;');
@@ -454,24 +396,16 @@
 		// tagHTML to avoid them being embedded in the new place holder
 		tagWikiText = _recoverPlaceholders2Wiki( tagWikiText );
 		tagHTML = _recoverPlaceholders2Html( tagHTML );
-		
-		// if this is text inserted by the template content then any text that was
-		// selected befor the plugin added the temlate will be wrapped in  span with
-		// class of selected content.  If this is noneditable wiki tag then
-		// we need to remove the span to prrevent it showing up in the text
-		if (  protection == 'nonEditable' ) {
-			tagWikiText = tagWikiText.replace(/<span[^>]*class=('|")selectedcontent\1[^>]*>(.*?)<\/span>/gmi, "$2");
-		}		
 
 		//  create id for new dom element, which wil also be the placeholder
 		// temporarily inserted in the text to avoid conversion problems
-		id = "{@@@" + tagClass.toUpperCase() + ":" + createUniqueNumber() + "@@@}";
+		id = "<@@@" + tagClass.toUpperCase() + ":" + createUniqueNumber() + "@@@>";
 
 		// encode the wiki text so it displays correctly
-		displayTagWikiText = htmlEncode( tagWikiText.replace( /\n/gi, '{@@nl@@}' ) );
+		displayTagWikiText = htmlEncode( tagWikiText.replace( /\n/gi, '<@@nl@@>' ) );
 
 		// replace any tag new line placeholders from the title
-		titleWikiText = tagWikiText.replace(/{@@[bht]nl@@}/gmi, "\n");
+		titleWikiText = tagWikiText.replace(/<@@[bht]nl@@>/gmi, "\n");
 
 		// if tagWikiText doesn't need to be parsed create dom element now
 		if ( tagHTML != 'toParse' && protection == 'nonEditable' ) {
@@ -583,9 +517,6 @@
 			fileType = 'File';
 			dstName = 'data_image';
 		}
-		
-		// abort if an error has been detected
-		if ( uploadResult.state == "error" ) return '';
 
 		// upload the image (or use existing image on wiki if already uploaded
 		// checking the response and process any errors or warning appropriately
@@ -655,9 +586,6 @@
 		if (htmlImageObject['width']
 			&& htmlImageObject['width'] !== wikiImageObject.sizewidth) {
 			wikiImageObject.sizewidth = htmlImageObject['width'];
-		} else if (!htmlImageObject['height']) {
-			// default to width of 300 if nothing set for width or height
-			wikiImageObject.sizewidth = 300;
 		}
 		if (htmlImageObject['height']
 			&& htmlImageObject['height'] !== wikiImageObject.sizeheight) {
@@ -761,63 +689,6 @@
 	};
 
 	/**
-	 * get parsed html from the wiki text provided.  Returns the
-	 * parsed html, original wikitext and a success/fail indicator
-	 *
-	 * @param {String} text
-	 * @returns {String}
-	 */
-	function _getParsedHtmlFromWiki(wikiText) {
-		var data = {
-				'action': 'parse',
-				'title': _mwtPageTitle,
-				'text': wikiText,
-				'prop': 'text|wikitext',
-				'disablelimitreport': '',
-				'disableeditsection': '',
-				'disabletoc': '',
-				'wrapoutputclass': '',
-				'format': 'json',},
-			parserResult = [];
-		$.ajax({
-			type: 'POST',
-			dataType: "json",
-			url: _mwtWikiApi,
-			data: data,
-			async: false,
-			success: function(data) {
-				var parsedHtml = data.parse.text["*"],
-					parsedWikiText = data.parse.wikitext["*"];
-
-				// replace encoded & characters
-				parsedHtml = parsedHtml.replace(/\&amp\;/gmi,'&');
-
-				// remove leading and trailing <div class="mw-parser-output"> in parsed html
-				parsedHtml = parsedHtml.replace(/^<div class="mw-parser-output">([^]*)<\/div>$/gmi, '$1');
-
-				// remove <p> tags in parsed html
-				parsedHtml = parsedHtml.replace(/<\/?p(>|\s[^>]*>)/gmi, '');
-
-				// remove leading and trailing spaces
-				parsedHtml = $.trim(parsedHtml);
-
-				// set up array of returned values
-				parserResult['parsedWikiText'] = parsedWikiText;
-				parserResult['parsedHtml'] = parsedHtml;		
-				parserResult['result'] = 'success';		
-			},
-			error:function(xhr,status, error){
-				parserResult['parsedWikiText'] = '';
-				parserResult['parsedHtml'] = '';		
-				parserResult['result'] = 'fail';		
-				parserResult['error'] = error;		
-			}
-		});
-
-		return parserResult;
-	}
-
-	/**
 	 * parses wiki code before calling function for
 	 * creating the DOM element and storing this
 	 * and and original wikicode for later recovery
@@ -830,6 +701,62 @@
 			tagWikiText = '',
 			tagInnerHTML = '';
 
+		/**
+		 * get parsed html from the wiki text provided.  Returns the
+		 * parsed html, original wikitext and a success/fail indicator
+		 *
+		 * @param {String} text
+		 * @returns {String}
+		 */
+		function getParsedHtmlFromWiki(wikiText) {
+			var data = {
+					'action': 'parse',
+					'title': _mwtPageTitle,
+					'text': wikiText,
+					'prop': 'text|wikitext',
+					'disablelimitreport': '',
+					'disableeditsection': '',
+					'disabletoc': '',
+					'wrapoutputclass': '',
+					'format': 'json',},
+				parserResult = [];
+			$.ajax({
+				type: 'POST',
+				dataType: "json",
+				url: _mwtWikiApi,
+				data: data,
+				async: false,
+				success: function(data) {
+					var parsedHtml = data.parse.text["*"],
+						parsedWikiText = data.parse.wikitext["*"];
+
+					// replace encoded & characters
+					parsedHtml = parsedHtml.replace(/\&amp\;/gmi,'&');
+
+					// remove leading and trailing <div class="mw-parser-output"> in parsed html
+					parsedHtml = parsedHtml.replace(/^<div class="mw-parser-output">([^]*)<\/div>$/gmi, '$1');
+
+					// remove <p> tags in parsed html
+					parsedHtml = parsedHtml.replace(/<\/?p(>|\s[^>]*>)/gmi, '');
+
+					// remove leading and trailing spaces
+					parsedHtml = $.trim(parsedHtml);
+
+					// set up array of returned values
+					parserResult['parsedWikiText'] = parsedWikiText;
+					parserResult['parsedHtml'] = parsedHtml;		
+					parserResult['result'] = 'success';		
+				},
+				error:function(xhr,status, error){
+					parserResult['parsedWikiText'] = '';
+					parserResult['parsedHtml'] = '';		
+					parserResult['result'] = 'fail';		
+					parserResult['error'] = error;		
+				}
+			});
+
+			return parserResult;
+		}
 
 		// it could be that the wikicode already contains placeholders
 		// for example for templates.  We need to convert these back before sending
@@ -837,7 +764,7 @@
 		wikiCode = _recoverPlaceholders2Wiki( wikiCode );
 
 		// then get the parsed wiki code from the wiki parser
-		parserResult = _getParsedHtmlFromWiki(wikiCode);
+		parserResult = getParsedHtmlFromWiki(wikiCode);
 
 		// check result
 		if ( parserResult.result == 'fail' ) {
@@ -1018,7 +945,7 @@
 			blockMatcher;
 
 		// replace non rendering new line placeholder with html equivalent
-		text = text.replace(/{@@slb@@}/gmi, _slb);
+		text = text.replace(/<@@slb@@>/gmi, _slb);
 
 		// the block matcher is used in a loop to determine whether to wrap the returned 
 		// html in div or span tags, we define it here so it only has to be defined once
@@ -1029,7 +956,7 @@
 		// document to avoid multiple calls to the api parser so speed things up
 		// there are two passes one to collect the parser text and the next to insert it
 		if (_tags4Html) {
-			text = text.replace(/\{@@@.*?:\d*@@@}/gmi, function(match) {
+			text = text.replace(/\<@@@.*?:\d*@@@>/gmi, function(match) {
 				// if the placeholder is in the array replace it otherwise
 				// return the placeholder escaped
 				if ((_tags4Html[match] == 'toParse') && (_tags4Wiki[match])) {
@@ -1039,7 +966,7 @@
 				} else if (_tags4Html[match]) {
 					return _tags4Html[match];
 				} else {
-					return match.replace(/^{/, '&#123;');						
+					return match.replace(/^</, '&lt;');						
 				}
 			});
 
@@ -1055,10 +982,10 @@
 				parserText.parsedHtml = parserText.parsedHtml.replace(/<p>\n{@@@@}\n<\/p>/gmi, "\n{@@@@}\n");
 
 				// sometimes the parser return null entries which will be misinterpreted !
-				// we put a nbsp there so that the span doesn't get sanitized away :-)
+				// we put a nbsp there so that the span doesn't get santized away :-)
 				parserText.parsedHtml = parserText.parsedHtml.replace(/\n{@@@@}\n{@@@@}\n/gmi, function (match) {
 
-					return "\n{@@@@}\n&nbsp;\n{@@@@}\n"
+					return "\n{@@@@}\n%nbsp;\n{@@@@}\n"
 				});
 
 				// now split the parsed html corresponding to the placeholders
@@ -1069,7 +996,7 @@
 					regex = parserTag;
 					matcher = new RegExp(regex, 'gmi');
 					text = text.replace(matcher, function(tag) {
-						var tagClass = tag.replace(/{@@@(.*):\d+?@@@}/gm, '$1').toLowerCase(),
+						var tagClass = tag.replace(/<@@@(.*):\d+?@@@>/gm, '$1').toLowerCase(),
 							wikiText,
 							html,
 							element,
@@ -1088,6 +1015,7 @@
 									// as the actual code may appear elsewhere in the text to where
 									// the image is displayed
 //0929									html = '<div>' + html + '</div>' ;									
+debugger;
 									if (_tags4Wiki[tag].match(/frameless/gmi)) {
 										html = html.replace(/<div/gmi,'<span');
 									} else {
@@ -1096,7 +1024,7 @@
 								
 								} else {
 									html = '<div>' + html + '</div>';
-									_tags4Wiki[tag] = '{@@bnl@@}' + _tags4Wiki[tag] + '{@@bnl@@}';
+									_tags4Wiki[tag] = '<@@bnl@@>' + _tags4Wiki[tag] + '<@@bnl@@>';
 								}
 							} else {
 								// otherwise wrap in a <span>
@@ -1110,6 +1038,7 @@
 						// now build the html equivalent from each parsed wikicode fragment
 						element = $(html);							
 						if (tagClass == 'image' ) {
+debugger;
 							element.addClass("mwt-nonEditableImage mwt-wikiMagic mwt-placeHolder mwt-" + tagClass + " " + _placeholderClass);
 						} else {
 							element.addClass("mwt-nonEditable mwt-wikiMagic mwt-" + tagClass);
@@ -1118,7 +1047,7 @@
 							'title': elementTitle,
 							'id': tag,
 							'data-mwt-type': tagClass,
-							'data-mwt-wikitext': htmlEncode( elementTitle.replace( /\n/gi, '{@@nl@@}' ) ), 
+							'data-mwt-wikitext': htmlEncode( elementTitle.replace( /\n/gi, '<@@nl@@>' ) ), 
 							'draggable': "true",
 							'contenteditable': "false"
 						});
@@ -1273,12 +1202,12 @@
 						refText,
 						refNote = '';
 	
-					$3 = $3.replace(/\n/gm, '{@@xnl@@}'); //0919
+					$3 = $3.replace(/\n/gm, '{@@vnl@@}'); //0919
 					refHtml = _convertWiki2Html( $.trim( $3 ) );
 	 				refText = editor.dom.createFragment( refHtml ).textContent
 					
-					refHtml = editor.dom.createFragment( refHtml ).firstChild.innerHTML.replace(/([^}]){@@xnl@@}{@@xnl@@}/gmi, '$1<br class="mwt-emptylineFirst"/>');
-					refHtml = refHtml.replace(/{@@xnl@@}/gmi, '<br class="mwt-emptyline"/>');
+					refHtml = editor.dom.createFragment( refHtml ).firstChild.innerHTML.replace(/([^}]){@@vnl@@}{@@vnl@@}/gmi, '$1<br class="mwt-emptylineFirst"/>');
+					refHtml = refHtml.replace(/{@@vnl@@}/gmi, '<br class="mwt-emptyline"/>');
 		
 					if ( refText == '' ) {
 						match = '<ref>Empty reference</ref>';
@@ -1388,7 +1317,7 @@
 				var preNewLines = '',
 					postNewLines = '',
 					placeHolder,
-					wikiText = '{@@bnl@@}' + $3 + $4 + '{@@bnl@@}', 
+					wikiText = '<@@bnl@@>' + $3 + $4 + '<@@bnl@@>', 
 					html = '<hr class="mw-hr" data-mwt-wikitext="' + encodeURI(wikiText) + '">';
 
 				// we need to keep put the '\n's in here in case a table or other block
@@ -1397,7 +1326,7 @@
 				if ($6.length == 1) {
 					postNewLines = '\n';
 				} else if ($6.length == 2) {
-					postNewLines = '{@@slb@@}\n';
+					postNewLines = '<@@slb@@>\n';
 				}
 
 				// we also need to process the case where there is text on
@@ -1463,6 +1392,7 @@
 					if ((extensionTags.indexOf(elmTagName) > -1) || 
 						(preservedTags.indexOf(elmTagName) > -1)) {
 						// process other tags that are allowed by mediawiki
+						elm.addClass( "mwt-preserveHtml" );
 
 						if (elm.attr( "title")) {
 							elm.attr( "title", function (i, title) {
@@ -1479,20 +1409,8 @@
 							// conserve any new lines in the inner html
 							// except in table tags that don't contain data!
 							
-							innerHTML = innerHTML.replace(/\n/gmi,'{@@vnl@@}');
+							innerHTML = innerHTML.replace(/\n/gmi,'<@@vnl@@>');
 							elm.prop( "innerHTML", innerHTML );
-						}
-
-						if ((elmTagName != 'table')
-							&& (elmTagName != 'tbody')
-							&& (elmTagName != 'thead')
-							&& (elmTagName != 'tfoot')
-							&& (elmTagName != 'caption')
-							&& (elmTagName != 'th')
-							&& (elmTagName != 'td')
-							&& (elmTagName != 'tr')) {
-
-							elm.addClass( "mwt-preserveHtml" );
 						}
 
 					} else {
@@ -1539,9 +1457,9 @@
 				} else {
 					// we need to preserve any new lines so they aren't lost when we
 					// decode the contents of any preserved html tags
-					$2 = $2.replace(/\n/gmi,'{@@vnl@@}');
+					$2 = $2.replace(/\n/gmi,'<@@vnl@@>');
 					$2 = _convertHtml2Wiki( $2 );
-					$2 = $2.replace(/{@@vnl@@}/gmi, '\n');
+					$2 = $2.replace(/<@@vnl@@>/gmi, '\n');
 
 					return $1 + _getPlaceHolder4Html($2, 'toParse', 'ppre', 'nonEditable');
 
@@ -1549,7 +1467,7 @@
 			});
 
 			// recover any remaining new line placeholders
-			text = text.replace(/{@@vnl@@}/gmi, '\n')
+			text = text.replace(/<@@vnl@@>/gmi, '\n')
 
 			// now we want to conserve, as much as we can, any formatting of retained html tags
 			// in the wiki text.  This is typcally used to make the wiki text more readable
@@ -1832,7 +1750,7 @@
 				});
 
 				// save any placeholders in the data attributes too
-				regex = '{@@@.*?:\\d*?@@@}';
+				regex = '<@@@.*?:\\d*?@@@>';
 				matcher = new RegExp(regex, 'gmi');
 				attr = attr.replace(matcher, function(match, $1) {
 					var html;
@@ -1851,8 +1769,8 @@
 
 			// make a regular expresion matcher to see if a line contains a block element
 			// this is used later when walking through the editor content line by line
-			blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@}|{@@@");
-			regex = '^\\s*({@@@' + blockTagList + ':\\d*@@@}' +
+			blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@>|<@@@");
+			regex = '^\\s*(<@@@' + blockTagList + ':\\d*@@@>' +
 				 '|<' + _mwtBlockTagsList.split("|").join("[\\s>]|<") +
 				 '|<\\/' + _mwtBlockTagsList.split("|").join(">|<\\/") +
 				 '|<br[^>]*>|\\*|\\#|\\:|\\;|\\||\\:?\\{\\|)' ;
@@ -2182,7 +2100,7 @@
 							if ( lines[i-1].match( /<td[^>]*>(\s|&nbsp;)*$/) ) {
 								// if first line of data in a table cell
 								if (lines[i+1].match(/^(\s|&nbsp;)*$/)) {
-//0914									lines[i] = lines[i] + '{@@slb@@}';
+//0914									lines[i] = lines[i] + '<@@slb@@>';
 								} else {
 //0914									lines[i] = lines[i] + '<br class="mwt-emptylineFirst"/>';
 								}
@@ -2193,7 +2111,7 @@
 								// previous line was start of cell
 								if ( lines[i-1].match( /<td[^>]*>(\s|&nbsp;)*$/) ) {
 									// previous line contained no data
-//0914									lines[i-1] = lines[i-1] + '{@@slb@@}';
+//0914									lines[i-1] = lines[i-1] + '<@@slb@@>';
 								} else if ( !lines[i].match(blockMatcher) ) {
 									// line  is not a block element
 									lines[i-1] = lines[i-1] + '<br class="mwt-emptyline"/>';
@@ -2512,14 +2430,14 @@
 			// this is used when walking through the editor content line by line.  We add
 			// back PRE because it isn't in the block tag list as mediawiki treats them 
 			// differently to how browsers do!
-			blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@}|{@@@") 
-				+ ':\\d*@@@}|{@@@pre:\\d*@@@}'
-				+ ':\\d*@@@}|{@@@ppre:\\d*@@@}';
-			regex = '({@@@' + blockTagList 
+			blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@>|<@@@") 
+				+ ':\\d*@@@>|<@@@pre:\\d*@@@>'
+				+ ':\\d*@@@>|<@@@ppre:\\d*@@@>';
+			regex = '(<@@@' + blockTagList 
 					+ '|<' 
 					+ _mwtBlockTagsList.split("|").join("[^>]*>|<") 
 					+ '|<\\/' + _mwtBlockTagsList.split("|").join(">|<\\/") 
-					+ '|<br[^>]*>|{@@slb@@})$' ;
+					+ '|<br[^>]*>|<@@slb@@>)$' ;
 			matcher = new RegExp(regex, 'i');
 
 			//Walk through text line by line
@@ -2546,10 +2464,10 @@
 								// a table close with text on the same line which is
 								// already closed with an empty line
 								if ( lines[i-1].search(/<br class="mwt-emptyline" \/>$/) > -1 ) {
-									lines[i] = lines[i] + '{@@slb@@}';
+									lines[i] = lines[i] + '<@@slb@@>';
 								} else {
 									if ( !lastLine) { 
-										lines[i] = lines[i] + '{@@slb@@}{@@slb@@}';
+										lines[i] = lines[i] + '<@@slb@@><@@slb@@>';
 									}
 								}
 							} else {
@@ -2607,8 +2525,8 @@
 				// any already substitued with a place holder or wiki markup for headings,
 				// tables and lists
 				preservedTagList = _mwtPreservedTagsList + '|' + _mwtInvariantTagsList;
-				startTagsList = _mwtBlockTagsList.split("|").join(":|{@@@");
-				postText = "\\s*(\\n|\\||!|\\{\\||#|\\*|;|=|:|{@@@" 
+				startTagsList = _mwtBlockTagsList.split("|").join(":|<@@@");
+				postText = "\\s*(\\n|\\||!|\\{\\||#|\\*|;|=|:|<@@@" 
 					+ startTagsList 
 					+ ":|\\s*$)"
 					+ "|<\\/?" 
@@ -2618,8 +2536,8 @@
 					+ "(\\|\\}\\s*$|=\\s*$|<\\/span>\\s*$|^\\s*(#|\\*|:|;|\\|\\||\\|-|\\|\\}))";
 	
 				// remove any exceptions from the list of tags that are ignored
-				postText = postText.replace(/:\|{@@@pre:/gmi, ""); // <pre> tags
-				postText = postText.replace(/:\|{@@@h[1-6]/gmi, ""); // <h[n]> tags
+				postText = postText.replace(/:\|<@@@pre:/gmi, ""); // <pre> tags
+				postText = postText.replace(/:\|<@@@h[1-6]/gmi, ""); // <h[n]> tags
 	
 				// cater for blank lines at start of text before blocks
 				regex = '([^\\n]+)(\\n)(?!(' + postText + '))';
@@ -2627,12 +2545,12 @@
 	
 				// also set up the matcher for the inner match statement to avoid having to redefine it
 				// every time the out matcher matches!
-				blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@}|{@@@");
-				regex2 = "(\\|\\}\\s*$|=\\s*$|{@@@" 
-					+ blockTagList + ":\\d*@@@}" 
+				blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@>|<@@@");
+				regex2 = "(\\|\\}\\s*$|=\\s*$|<@@@" 
+					+ blockTagList + ":\\d*@@@>" 
 					+ "|<\\/?" 
 					+ _mwtBlockTagsList.split('|').join('[\\s>]|<\\/?') 
-//					+ preservedTagList.split('|').join('[\\s>]|<\\/?')
+					+ preservedTagList.split('|').join('[\\s>]|<\\/?')
 					+ "[\\s>]" 
 					+ "|^\\s*(#|\\*|:|;|\\|\\||\\|-|\\|\\}))";
 	
@@ -2642,7 +2560,7 @@
 				matcher2 = new RegExp(regex2, 'i');
 	
 				// special case if page starts with a single new line
-				text = text.replace(/^\n([^\n*#{]+)/, '{@@slb@@}$1');
+				text = text.replace(/^\n([^\n*#{]+)/, '<@@slb@@>$1');
 	
 				// now process all single new lines
 				do {
@@ -2661,7 +2579,7 @@
 							// insert placeholder for single new line if placeholder is defined
 							processFlag = true;
 							if (_slb) {
-								return $1 + '{@@slb@@}';
+								return $1 + '<@@slb@@>';
 							} else {
 								return $1 + ' ';
 							}
@@ -2683,14 +2601,14 @@
 					matcher,
 					lineBefore;
 					
-				blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@}|{@@@") 
-					+ ':\\d*@@@}|{@@@pre:\\d*@@@}'
-					+ ':\\d*@@@}|{@@@ppre:\\d*@@@}';
-				regex = '({@@@' + blockTagList 
+				blockTagList = _mwtBlockTagsList.split("|").join(":\\d*@@@>|<@@@") 
+					+ ':\\d*@@@>|<@@@pre:\\d*@@@>'
+					+ ':\\d*@@@>|<@@@ppre:\\d*@@@>';
+				regex = '(<@@@' + blockTagList 
 						+ '|<' 
 						+ _mwtBlockTagsList.split("|").join("[^>]*>|<") 
 						+ '|<\\/' + _mwtBlockTagsList.split("|").join(">|<\\/") 
-						+ '|<br[^>]*>|{@@slb@@})$' ;
+						+ '|<br[^>]*>|<@@slb@@>)$' ;
 				matcher = new RegExp(regex, 'i');
 
 				// wrap pseudo blocks in a paragraph.  If the insert is inline the use 
@@ -2774,6 +2692,19 @@
 				} else {
 					return outerHtml;
 				}
+			});
+
+			// put something in mepty SPANs
+			$dom.find( "s" ).replaceWith( function() {
+				var elm = this,
+					outerHtml = elm.outerHTML,
+					innerHtml = elm.innerHTML;
+
+				if ( innerHtml.match(/^(\s|&nbsp;)*$/)) {
+					elm.innerHTML = 'Hello World';
+				}
+//				return elm.outerHtml;
+				return 'Hello World';
 			});
 
 			// convert DOM back to html text
@@ -2898,8 +2829,7 @@
 				text = text.replace(/data-mwt-attr=('|")(.*?)\1/gmi, function(match, $1, $2) {
 					// $1 = type of quoation mark
 					// $2 = attribute string
-//					$2 = $2.replace(/\&amp;/gmi, '&').replace(/\&lt;@@/gmi, '{@@').replace(/@@\&gt;/gmi, '@@}');
-					$2 = $2.replace(/\&amp;/gmi, '&');
+					$2 = $2.replace(/\&amp;/gmi, '&').replace(/\&lt;/gmi, '<').replace(/\&gt;/gmi, '>');
 					return $2;
 				});
 				// for some reason Tiny can place spurios spacess at the end of
@@ -2928,11 +2858,11 @@
 					elm.replaceWith( function(a) {
 						// substitute the wiki text and store in a placeholder
 						var wikiText = htmlDecode( this.attributes[ "data-mwt-wikitext" ].value ),
-							id = "{@@@MAGIC:" + createUniqueNumber() + "@@@}";
+							id = "<@@@MAGIC:" + createUniqueNumber() + "@@@>";
 
 						if (elm.hasClass( 'mwt-template' )) {
 							// protect pipe chracters within templates
-							wikiText = wikiText.replace(/\|/gm,'{@@pc@@}');
+							wikiText = wikiText.replace(/\|/gm,'<@@pc@@>');
 						}
 
 						_tags4Wiki[id] = wikiText;
@@ -2946,17 +2876,17 @@
 				} else if (elm.hasClass( 'mwt-emptylineFirst' )) {
 					// process empty line first tags
 					elm.replaceWith( function(a) {
-						return '{@@elf@@}';
+						return '<@@elf@@>';
 					});
 				} else if (elm.hasClass( 'mwt-emptyline' )) {
 					// process additional empty line tags
 					elm.replaceWith( function(a) {
-						return '{@@enl@@}';
+						return '<@@enl@@>';
 					});
 				} else if (elm.hasClass( 'mwt-singleLinebreak' )) {
 					// process non rendering new lines
 					elm.replaceWith( function(a) {
-						return '{@@snl@@}';
+						return '<@@snl@@>';
 					});
 				} else if (elm.hasClass( 'reference' )) {
 					// process reference numbers
@@ -2994,7 +2924,7 @@
 
 						// set up newlines and spaces if required (for embedded html block tags)
 						if (typeof elm.attr('data-mwt-sameLine') != "undefined") {
-							if (elm.attr('data-mwt-sameLine') == 'false') tagNewline = '{@@bnl@@}';
+							if (elm.attr('data-mwt-sameLine') == 'false') tagNewline = '<@@bnl@@>';
 						}
 						if (elm.attr('data-mwt-spaces')) tagSpaces = elm.attr('data-mwt-spaces');
 						outerHtml = tagNewline + tagSpaces + elm[0].innerHTML;
@@ -3007,32 +2937,27 @@
 							tagSpaces = '',
 							newLineAfter = '';
 							
-						// clean up spurious spans left by template plugin
-						if ( elm.hasClass( 'selectedcontent' )) {
-							outerHtml = elm[0].innerHTML;
-						} else {
-							// set up newlines and spaces if required (for embedded html block tags)
-							if (typeof elm.attr('data-mwt-sameLine') != "undefined") {
-								if (elm.attr('data-mwt-sameLine') == 'false') tagNewline = '{@@bnl@@}';
-							}
-							if (elm.attr('data-mwt-spaces')) tagSpaces = elm.attr('data-mwt-spaces');
-							if ( elm[0].nextSibling == null ) {
-	//								newLineAfter = '{@@bnl@@}';
-							} else if (elm[0].nextSibling.nodeName == "#text" ) {
-								if (elm[0].nextSibling.textContent.match(/^\s*$/)) {
-									newLineAfter = '{@@bnl@@}';
-								}
-							} else if ( editor.dom.isBlock( elm[0] ) ) {
-									newLineAfter = '{@@bnl@@}';
-							}
-							elm.removeClass( 'mwt-preserveHtml' );
-							elm.removeAttr( 'data-mwt-sameLine' );
-							elm.removeAttr( 'data-mwt-spaces' )
-							if ( elm.attr( 'class' ) == '' ) {
-								elm.removeAttr( 'class' );
-							}
-							outerHtml = tagNewline + tagSpaces + _recoverPlaceholders2Wiki( elm[0].outerHTML ) + newLineAfter;
+						// set up newlines and spaces if required (for embedded html block tags)
+						if (typeof elm.attr('data-mwt-sameLine') != "undefined") {
+							if (elm.attr('data-mwt-sameLine') == 'false') tagNewline = '<@@bnl@@>';
 						}
+						if (elm.attr('data-mwt-spaces')) tagSpaces = elm.attr('data-mwt-spaces');
+						if ( elm[0].nextSibling == null ) {
+//								newLineAfter = '<@@bnl@@>';
+						} else if (elm[0].nextSibling.nodeName == "#text" ) {
+							if (elm[0].nextSibling.textContent.match(/^\s*$/)) {
+								newLineAfter = '<@@bnl@@>';
+							}
+						} else if ( editor.dom.isBlock( elm[0] ) ) {
+								newLineAfter = '<@@bnl@@>';
+						}
+						elm.removeClass( 'mwt-preserveHtml' );
+						elm.removeAttr( 'data-mwt-sameLine' );
+						elm.removeAttr( 'data-mwt-spaces' )
+						if ( elm.attr( 'class' ) == '' ) {
+							elm.removeAttr( 'class' );
+						}
+						outerHtml = tagNewline + tagSpaces + _recoverPlaceholders2Wiki( elm[0].outerHTML ) + newLineAfter;
 
 					} else if ( elm[0].tagName == 'IMG' ) {
 						// process images that aren't links
@@ -3085,7 +3010,7 @@
 							html = '',
 							outerHTML,
 							tagNewline = '',
-							newLineAfter = '{@@bnl@@}',
+							newLineAfter = '<@@bnl@@>',
 							tagSpaces = '';
 
 						// if this is a table in a definition then remove
@@ -3094,8 +3019,7 @@
 						if ( !elm[0].classList.contains( 'mwt-preserveHtml' )) {
 							// case where tag inserted in TinyMCE editor
 							var temp = elm[0].innerHTML;
-//							if ( !elm[0].innerHTML.match(/^&lt;@@@(LI|DD):/) ) {
-							if ( !elm[0].innerHTML.match(/^{@@@(LI|DD):/) ) {
+							if ( !elm[0].innerHTML.match(/^&lt;@@@(LI|DD):/) ) {
 								// build the wiki text list tag
 								for (var i = parents.length - 1; i >= 0; i--) {
 									if ( !parents[i].classList.contains( 'mwt-preserveHtml' )) {
@@ -3139,12 +3063,12 @@
 
 								if ( typeof elm.attr('data-mwt-sameLine') == "undefined" ) {
 									if ( elm[0].previousSibling == null ) {
-										tagNewline = '{@@nl@@}';
+										tagNewline = '<@@nl@@>';
 									} else {
-										tagNewline = '{@@bnl@@}';										
+										tagNewline = '<@@bnl@@>';										
 									}
 								} else {
-									if ( elm.attr('data-mwt-sameLine') == 'false' ) tagNewline = '{@@bnl@@}';
+									if ( elm.attr('data-mwt-sameLine') == 'false' ) tagNewline = '<@@bnl@@>';
 								}
 
 								if ( elm.attr('data-mwt-spaces')) tagSpaces = elm.attr('data-mwt-spaces') ;
@@ -3168,7 +3092,7 @@
 
 						// if no children of type list then this is a wiki list
 						// so just return the innerHtml
-						if ( !innerHtml.match(/^s*?{@@@(PLI|PDD):/)) {
+						if ( !innerHtml.match(/^s*?<@@@(PLI|PDD):/)) {
 							elm.replaceWith( function(a) {
 								return innerHtml;
 							});
@@ -3191,10 +3115,10 @@
 
 						// build the header, including any spaces before the header text
 						heading = altro + spacesBefore + text + spacesAfter + altro ;
-						heading = '{@@hnl@@}' + heading + '{@@hnl@@}';
+						heading = '<@@hnl@@>' + heading + '<@@hnl@@>';
 						// build back any new lines after the heading
 						for (var i = 0; i < newlines; i++) {
-							heading += '{@@nl@@}';
+							heading += '<@@nl@@>';
 						}
 						outerHtml = heading;
 
@@ -3203,8 +3127,8 @@
 						// happens when all the other new line codes are processed in newLines2wiki
 						var parents = elm.parents( "table" ),
 							outerHtml = elm[0].outerHTML,
-							newLineBefore = '{@@tnl@@}',
-							newLineAfter = '{@@tnl@@}';
+							newLineBefore = '<@@tnl@@>',
+							newLineAfter = '<@@tnl@@>';
 
 						// if the table is in a definition item then don't place a new line before it
 						if ( elm[0].parentElement.tagName.toUpperCase() == 'DD' ) {
@@ -3219,7 +3143,7 @@
 							$1 = $1.replace(/\s*data-mwt-tablestartnewlines="(\d)"/gmi, function (match,$1) {
 								//$1 = number of new lines following the opening code of table
 								for ( var i = 1 ; i < $1 ; i++ ) {
-									newLines += "{@@tnl@@}";
+									newLines += "<@@tnl@@>";
 								}
 								return '';
 							});
@@ -3238,7 +3162,7 @@
 							if ( parents.length >= 1 ) {
 								newLineAfter = '';
 							}
-							return newLineBefore + "{" + _pipeText + $1 + newLines + $2 + "{@@tnl@@}" + _pipeText + "}" + newLineAfter;
+							return newLineBefore + "{" + _pipeText + $1 + newLines + $2 + "<@@tnl@@>" + _pipeText + "}" + newLineAfter;
 						});
 
 					} else if ( elm[0].tagName == 'CAPTION' ) {
@@ -3253,9 +3177,9 @@
 							// process other attributes
 							$1 = processStoredAttributes2Wiki( $1 );
 							if ($1) {
-								return "{@@tnl@@}" + _pipeText + "+" + $1 + _pipeText + $2;
+								return "<@@tnl@@>" + _pipeText + "+" + $1 + _pipeText + $2;
 							} else {
-								return "{@@tnl@@}" + _pipeText + "+" + $2;
+								return "<@@tnl@@>" + _pipeText + "+" + $2;
 							}
 						});
 
@@ -3276,7 +3200,7 @@
 							}
 							// process other attributes
 							$1 = processStoredAttributes2Wiki( $1 );
-							return "{@@tnl@@}" + _pipeText + "-" + $1 + $2;
+							return "<@@tnl@@>" + _pipeText + "-" + $1 + $2;
 						});
 
 					} else if ( elm[0].tagName == 'TH' ) {
@@ -3289,7 +3213,7 @@
 							// $3 = content of the tag
 							// $4 = spaces at end of content of the tag
 							var cellPipeText = '!',
-								cellNewLine = '{@@tnl@@}',
+								cellNewLine = '<@@tnl@@>',
 								cellEmptyLineFirst = '';
 
 							$1 = $1.replace(/ data-mwt-wikiPipe\="(.*?)"/gmi, function (match, $1) {
@@ -3304,7 +3228,7 @@
 								if ($1 == 'true') {
 									cellNewLine = "";
 								} else {
-									cellNewLine = "{@@tnl@@}";
+									cellNewLine = "<@@tnl@@>";
 								}
 								return "";
 							});
@@ -3315,7 +3239,7 @@
 								if ($2 == 'false') {
 									cellEmptyLineFirst = "";
 								} else {
-									cellEmptyLineFirst = "{@@tnl@@}";
+									cellEmptyLineFirst = "<@@tnl@@>";
 								}
 								return "";
 							});
@@ -3346,7 +3270,7 @@
 							// $2 = spaces before content of the tag
 							// $3 = content of the tag
 							var cellPipeText = _pipeText,
-								cellNewLine = '{@@tnl@@}',
+								cellNewLine = '<@@tnl@@>',
 								cellEmptyLineFirst = '';
 
 							// process the pipe text
@@ -3362,7 +3286,7 @@
 								if ($1 == 'true') {
 									cellNewLine = "";
 								} else {
-									cellNewLine = "{@@tnl@@}";
+									cellNewLine = "<@@tnl@@>";
 								}
 								return "";
 							});
@@ -3373,7 +3297,7 @@
 								if ($2 == 'false') {
 									cellEmptyLineFirst = "";
 								} else {
-									cellEmptyLineFirst = "{@@tnl@@}";
+									cellEmptyLineFirst = "<@@tnl@@>";
 								}
 								return "";
 							});
@@ -3395,7 +3319,7 @@
 						// process stuff after table close on the same line
 						var outerHtml = elm[0].outerHTML,
 							innerHtml = elm[0].innerHTML,
-							id = "{@@@" + elm[0].tagName.toUpperCase() + ":" + createUniqueNumber() + "@@@}",
+							id = "<@@@" + elm[0].tagName.toUpperCase() + ":" + createUniqueNumber() + "@@@>",
 							tableClose = '';
 
 						outerHtml = outerHtml.replace(/mwt-spaces="(.*?)"/gi,
@@ -3446,23 +3370,25 @@
 					} else if ( elm[0].tagName == 'SPAN' ) {
 						// process spans containing only nbsp
 						innerHtml = elm[0].innerHTML;
+
 						outerHtml = elm[0].outerHTML;
+						
 						if ( innerHtml == '&nbsp;' ) outerHtml = innerHtml;
 
 					} else if (( elm[0].tagName == 'DIV' ) || ( elm[0].tagName == 'P' )) {
 						var html,
 							outerHtml = elm[0].outerHTML,
 							innerHtml = elm[0].innerHTML;
+debugger;
 						if (elm.hasClass( 'mwt-paragraph' )) {
 							// if copying from TinyMCE process paragraph tags 
 							if ( innerHtml == '&nbsp;' ) {
-								outerHtml  = '{@@pnl@@}';
+								outerHtml  = '<@@pnl@@>';
 							} else {
-								outerHtml  = '{@@pnl@@}' + $.trim( elm.html() );
+								outerHtml  = '<@@pnl@@>' + $.trim( elm.html() );
 							}
-						} else if ( elm.hasClass( 'mwt-notParagraph' ) ||
-							elm.hasClass( 'tinywrapper' )) {
-							// not paragraph or tinywrapper means it has no new lines before it
+						} else if (elm.hasClass( 'mwt-notParagraph' )) {
+							// not paragraph means it has no new lines before it
 							outerHtml  = $.trim(elm.html());
 						} else if ( innerHtml.match(/^(\s|&nbsp;)*$/)) {
 							// remove empty P's and DIV's created by TinyMCE
@@ -3474,7 +3400,7 @@
 					}
 
 					// create a place holder for the converted element
-					id = "{@@@" + elm[0].tagName.toUpperCase() + ":" + createUniqueNumber() + "@@@}";
+					id = "<@@@" + elm[0].tagName.toUpperCase() + ":" + createUniqueNumber() + "@@@>";
 					
 					//remove any unwanted data attributes
 					outerHtml = outerHtml.replace(/data-mce-[^=]*?=\s*("|')[^\1]*?\1\s*/gmi, '');
@@ -3508,7 +3434,7 @@
 
 			// clean up newline before images
 			// do it here before placeholders are converted back
-			text = text.replace(/{@@pnl@@}({@@@IMAGE:)/gmi, '$1');
+			text = text.replace(/<@@pnl@@>(<@@@IMAGE:)/gmi, '$1');
 			return text;
 		}
 		/**
@@ -3519,18 +3445,17 @@
 		 */
 		function recoverTags2Wiki(text) {
 			if (_tags4Wiki){
-				while (text.match(/\{@@@.*?:\d*@@@}/)) {
-					text = text.replace(/(\{@@@.*?:\d*@@@})/gi, function(match, $1, offset, text) {
+				while (text.match(/\<@@@.*?:\d*@@@>/)) {
+					text = text.replace(/(\<@@@.*?:\d*@@@>)/gi, function(match, $1, offset, text) {
 
 						// replace '&amp;amp;' with '&amp;' as we double escaped these when they were converted
 //						return _tags4Wiki[$1].replace(/&amp;amp;/gmi,'&amp;');
 						// '&amp;' is processed by the wiki don and turned into '&'
 						// so we subsitue it with a placeholder which will be replaced later
 						if ( _tags4Wiki[$1] != undefined) {
-//							return _tags4Wiki[$1].replace(/&amp;/gmi,'{@@_@@}').replace(/@@&gt;/gmi,'@@}').replace(/&lt;@@/gmi,'{@@');
-							return _tags4Wiki[$1].replace(/&amp;/gmi,'{@@_@@}');
+							return _tags4Wiki[$1].replace(/&amp;/gmi,'{{{{@@@@@}}}}').replace(/&gt;/gmi,'>').replace(/&lt;/gmi,'<');
 						} else {
-							return '### ' + $1.replace(/@@@}/gmi,'&#125;').replace(/{@@@/gmi,'&#123;') + ' not found ###';;
+							return '### ' + $1.replace(/>/gmi,'&gt;').replace(/</gmi,'&lt;') + ' not found ###';;
 						}
 					});
 				}
@@ -3549,86 +3474,86 @@
 				findText;
 // DC TODO tidy this up/rationalise when satisfied it is OK
 			// protect any new lines embedded in the html
-			text = text.replace(/\n(?!{@@enl@@})/gmi, "{@@enl@@}"); //0907
+			text = text.replace(/\n(?!<@@enl@@>)/gmi, "<@@enl@@>"); //0907
 			
 			// process single new lines bracketed by block new lines
-			text = text.replace(/({@@[epbht]nl@@})*(\s*{@@snl@@}\s*)/gmi, "$2");
-//0914			text = text.replace(/(\s*{@@snl@@}\s*)({@@[pbht]nl@@})*/gmi, function(match, $1, $2, $3, $4) {
+			text = text.replace(/(<@@[epbht]nl@@>)*(\s*<@@snl@@>\s*)/gmi, "$2");
+//0914			text = text.replace(/(\s*<@@snl@@>\s*)(<@@[pbht]nl@@>)*/gmi, function(match, $1, $2, $3, $4) {
 //0914				return $1;
 //0914			});
-			text = text.replace(/(\s*{@@snl@@}\s*)({@@[pbht]nl@@})*/gmi, "$1");
+			text = text.replace(/(\s*<@@snl@@>\s*)(<@@[pbht]nl@@>)*/gmi, "$1");
 			// process empty lines bracketed by block new lines
-//0914			text = text.replace(/({@@[pbht]nl@@})?((\s*{@@(enl|elf)?@@}\s*)+)({@@[pbht]nl@@})?/gmi, "$2");
-			text = text.replace(/({@@[bht]nl@@})*((\s*{@@(enl|elf)?@@}\s*)+)({@@[bht]nl@@})*/gmi, "$2"); //0907a
-			text = text.replace(/({@@[p]nl@@})((\s*{@@(enl|elf)?@@}\s*)+)({@@[p]nl@@})/gmi, "$2"); //0907a
-//0916			text = text.replace(/({@@pnl@@})({@@[bht]nl@@})/gmi, "$1"); //0907a
-			text = text.replace(/({@@pnl@@})({@@[bht]nl@@})*/gmi, "$1"); //0916
+//0914			text = text.replace(/(<@@[pbht]nl@@>)?((\s*<@@(enl|elf)?@@>\s*)+)(<@@[pbht]nl@@>)?/gmi, "$2");
+			text = text.replace(/(<@@[bht]nl@@>)*((\s*<@@(enl|elf)?@@>\s*)+)(<@@[bht]nl@@>)*/gmi, "$2"); //0907a
+			text = text.replace(/(<@@[p]nl@@>)((\s*<@@(enl|elf)?@@>\s*)+)(<@@[p]nl@@>)/gmi, "$2"); //0907a
+//0916			text = text.replace(/(<@@pnl@@>)(<@@[bht]nl@@>)/gmi, "$1"); //0907a
+			text = text.replace(/(<@@pnl@@>)(<@@[bht]nl@@>)*/gmi, "$1"); //0916
 
 			// deal with table ends
-			text = text.replace(/{@@tnl@@}{@@pnl@@}(({@@enl@@})*)/gmi, function(match, $1) {
+			text = text.replace(/<@@tnl@@><@@pnl@@>((<@@enl@@>)*)/gmi, function(match, $1) {
 				//$1 = number of new lines separating header from next paragraph
 				var newlines = '',
 					length = 0;
 
 				if ( $1 ) length = ($1.length/9)  + 1;
 				for (var i= 0; i <= length; i++ ) {
-					newlines = newlines + '{@@nl@@}';
+					newlines = newlines + '<@@nl@@>';
 				} 
 				
 				return newlines;
 			});//0918
 
 			// deal with headers
-			text = text.replace(/{@@hnl@@}(({@@nl@@})*){@@[pbth]nl@@}/gmi, function(match, $1) {
+			text = text.replace(/<@@hnl@@>((<@@nl@@>)*)<@@[pbth]nl@@>/gmi, function(match, $1) {
 				//$1 = number of new lines separating header from next paragraph
 				var newlines = '',
 					length = 0;
 
 				if ( $1 ) length = ($1.length/8);
 				for (var i= 0; i <= length; i++ ) {
-					newlines = newlines + '{@@nl@@}';
+					newlines = newlines + '<@@nl@@>';
 				} 
 				
 				return newlines;
 			});//0918
-//			text = text.replace(/{@@hnl@@}(({@@nl@@})*){@@[bht]nl@@}/gmi, '{@@nl@@}$1');//0918
+//			text = text.replace(/<@@hnl@@>((<@@nl@@>)*)<@@[bht]nl@@>/gmi, '<@@nl@@>$1');//0918
 			
-//0916			text = text.replace(/({@@[bht]nl@@})({@@pnl@@})/gmi, "$2"); //0907a
-			text = text.replace(/({@@[bht]nl@@})*({@@pnl@@})/gmi, "$2"); //0916
+//0916			text = text.replace(/(<@@[bht]nl@@>)(<@@pnl@@>)/gmi, "$2"); //0907a
+			text = text.replace(/(<@@[bht]nl@@>)*(<@@pnl@@>)/gmi, "$2"); //0916
 			// replace remaining br_emptyline_first with 2 new lines
-			text = text.replace(/\n?{@@elf@@}/gmi, "{@@2nl@@}");
+			text = text.replace(/\n?<@@elf@@>/gmi, "<@@2nl@@>");
 			// replace br_emptyline with a single new line
-			text = text.replace(/\n?{@@enl@@}/gmi, "{@@nl@@}");
+			text = text.replace(/\n?<@@enl@@>/gmi, "<@@nl@@>");
 			// respect the &nbsp
-			text = text.replace(/{@@bnl@@}(&nbsp;)/gmi, "$1");
+			text = text.replace(/<@@bnl@@>(&nbsp;)/gmi, "$1");
 			// one or more forced new lines for blocks at the start of the page
 			// should be removed
-			text = text.replace(/^({@@[pbht]nl@@})*/gmi, "");
+			text = text.replace(/^(<@@[pbht]nl@@>)*/gmi, "");
 			// where two or more blocks are adjacent we only need one new line
-//0916			text = text.replace(/({@@[pbht]nl@@}\s*)+{@@[pbht]nl@@}/gmi, "{@@nl@@}");
-			text = text.replace(/({@@[bht]nl@@}\s*)+{@@[bht]nl@@}/gmi, "{@@nl@@}"); //0916
+//0916			text = text.replace(/(<@@[pbht]nl@@>\s*)+<@@[pbht]nl@@>/gmi, "<@@nl@@>");
+			text = text.replace(/(<@@[bht]nl@@>\s*)+<@@[bht]nl@@>/gmi, "<@@nl@@>"); //0916
 			// where one or two new lines are followed or preceded by
 			// a header/block/table new line then remove it
-			text = text.replace(/{@@2nl@@}{@@[pbht]nl@@}/gmi, "{@@2nl@@}");
-			text = text.replace(/{@@[pbht]nl@@}{@@2nl@@}/gmi, "{@@2nl@@}");
-//0919			text = text.replace(/{@@hnl@@}{@@nl@@}/gmi, "{@@nl@@}");
-//0914			text = text.replace(/{@@nl@@}{@@[pbht]nl@@}/gmi, "{@@nl@@}");
-			text = text.replace(/{@@nl@@}{@@[bht]nl@@}/gmi, "{@@nl@@}"); //0907
+			text = text.replace(/<@@2nl@@><@@[pbht]nl@@>/gmi, "<@@2nl@@>");
+			text = text.replace(/<@@[pbht]nl@@><@@2nl@@>/gmi, "<@@2nl@@>");
+//0919			text = text.replace(/<@@hnl@@><@@nl@@>/gmi, "<@@nl@@>");
+//0914			text = text.replace(/<@@nl@@><@@[pbht]nl@@>/gmi, "<@@nl@@>");
+			text = text.replace(/<@@nl@@><@@[bht]nl@@>/gmi, "<@@nl@@>"); //0907
 			// rationalise forced new lines for blocks at start and end of table cells
-			text = text.replace(/(({@@tnl@@})?\|{1,2}\s*){@@[bh]nl@@}/gmi, "$1");
-			text = text.replace(/{@@[bh]nl@@}(({@@tnl@@})?\|{1,2}\s*)/gmi, "$1");
+			text = text.replace(/((<@@tnl@@>)?\|{1,2}\s*)<@@[bh]nl@@>/gmi, "$1");
+			text = text.replace(/<@@[bh]nl@@>((<@@tnl@@>)?\|{1,2}\s*)/gmi, "$1");
 			// clean up newline before tables in definitions
-			text = text.replace(/{@@pnl@@}:{/gmi, '{@@bnl@@}:{');
+			text = text.replace(/<@@pnl@@>:{/gmi, '<@@bnl@@>:{');
 			// otherwise replace forced 'p' placeholder with single new line
-			text = text.replace(/{@@pnl@@}/gmi, "{@@2nl@@}");
+			text = text.replace(/<@@pnl@@>/gmi, "<@@2nl@@>");
 			// otherwise replace forced new line placeholder with single new line
-			text = text.replace(/{@@[bht]nl@@}/gmi, "{@@nl@@}");
+			text = text.replace(/<@@[bht]nl@@>/gmi, "<@@nl@@>");
 			// replace br_singlelinebreak with single new line
-			text = text.replace(/{@@snl@@}/gmi, "{@@nl@@}");
+			text = text.replace(/<@@snl@@>/gmi, "<@@nl@@>");
 			// replace the remaining placeholders with wiki code
-			text = text.replace(/{@@br@@}/gmi, "<br />");
-			text = text.replace(/{@@2nl@@}/gmi, "\n\n");
-			text = text.replace(/{@@nl@@}/gmi, "\n");
+			text = text.replace(/<@@br@@>/gmi, "<br />");
+			text = text.replace(/<@@2nl@@>/gmi, "\n\n");
+			text = text.replace(/<@@nl@@>/gmi, "\n");
 			// tidy up end of lists(this is an assumption)
 			// note: [^\S\r\n] matches whitespace without new lines
 			text = text.replace(/(<\/li>)([^\S\r\n]*<\/[uo]l>)/gi, "$1\n$2");
@@ -3667,7 +3592,7 @@
 		}
 		
 		//recover protected pipes in templates
-		text =text.replace(/{@@pc@@}/gmi, '|');
+		text =text.replace(/<@@pc@@>/gmi, '|');
 
 		// clean up empty space at end of text
 		text = text.trimRight();
@@ -3675,7 +3600,7 @@
 		// because _ is called recusrsively we get a problem that
 		// html entities of form &xxx; get over converted so we used a
 		// placeholder to prevent this.  The next line reverse this
-		text = text.replace(/{@@_@@}/gmi,"&");
+		text = text.replace(/{{{{@@@@@}}}}/gmi,"&");
 
 		// wrap the text in an object to send it to event listeners
 		textObject = {text: text};
@@ -3702,6 +3627,29 @@
 			return '';
 		});
 
+		// upload any images that aren't part of a link
+		$dom.find( "img" ).replaceWith( function() {
+			var elm = $( this ),
+				aLink,
+				linkClasses,
+				linkDataType,
+				id;
+
+			if (elm[0].parentNode.tagName != "A") {
+				linkClasses = 'mwt-nonEditableImage mwt-wikiMagic mwt-placeHolder mwt-image mwt-hidePlaceholder';
+				linkDataType = 'image';
+				aLink = _getWikiImageLink( elm[0] );
+
+				id = "<@@@EXTERNALLINK:" + createUniqueNumber() + "@@@>";
+				_tags4Wiki[id] = aLink;
+
+				return '<span class="' + linkClasses + '" title="' + aLink + '" id="' + id + '" data-mwt-type="' + linkDataType + '" data-mwt-wikitext="' + aLink + '" draggable="true" contenteditable="false">' + elm[0].outerHTML + '</span>';
+
+			} else {
+				return elm[0].outerHTML;
+			}
+		});
+
 		// convert links to wikilinks
 		$dom.find( "a" ).replaceWith( function() {
 			var elm = $( this ),
@@ -3709,8 +3657,6 @@
 				dstName = elm[0].href,
 				title = elm[0].text,
 				aLink,
-				parserResult,
-				parsedHtml,
 				linkClasses,
 				linkDataType,
 				id;
@@ -3743,48 +3689,12 @@
 				aLink = '[[' + dstName + ']]'
 			}
 					
-			id = "{@@@EXTERNALLINK:" + createUniqueNumber() + "@@@}";
+			id = "<@@@EXTERNALLINK:" + createUniqueNumber() + "@@@>";
 			_tags4Wiki[id] = aLink;
 
-			parserResult = _getParsedHtmlFromWiki( aLink );
-			parsedHtml = parserResult['parsedHtml'];		
-
-			return '<div class="' + linkClasses + '" title="' + aLink + '" id="' + id + '" data-mwt-type="' + linkDataType + '" data-mwt-wikitext="' + aLink + '" draggable="true" contenteditable="false">' + parsedHtml + '</div>';
+			return '<span class="' + linkClasses + '" title="' + aLink + '" id="' + id + '" data-mwt-type="' + linkDataType + '" data-mwt-wikitext="' + aLink + '" draggable="true" contenteditable="false">' + elm[0].outerHTML + '</span>';
 		});
 		
-		// upload any images that aren't part of a link
-		$dom.find( "img" ).replaceWith( function() {
-			var elm = $( this ),
-				aLink,
-				parserResult,
-				parsedHtml,
-				linkClasses,
-				linkDataType,
-				id;
-
-			if (elm[0].parentNode.tagName != "A") {
-				linkClasses = 'mwt-nonEditableImage mwt-wikiMagic mwt-placeHolder mwt-image mwt-hidePlaceholder';
-				linkDataType = 'image';
-				aLink = _getWikiImageLink( elm[0] );
-				
-				if ( aLink ) {
-					// if a link was created
-					id = "{@@@EXTERNALLINK:" + createUniqueNumber() + "@@@}";
-					_tags4Wiki[id] = aLink;
-					
-					parserResult = _getParsedHtmlFromWiki( aLink );
-					parsedHtml = parserResult['parsedHtml'];
-	
-					return '<div class="' + linkClasses + '" title="' + aLink + '" id="' + id + '" data-mwt-type="' + linkDataType + '" data-mwt-wikitext="' + aLink + '" draggable="true" contenteditable="false">' + parsedHtml + '</div>';
-				} else {
-					// else return nothing
-					return '';
-				}
-			} else {
-				return elm[0].outerHTML;
-			}
-		});
-
 		return $dom;
 	}
 
@@ -3804,14 +3714,7 @@
 	function _onBeforeSetContent(e) {
 		// if raw format is requested, this is usually for internal issues like
 		// undo/redo. So no additional processing should occur. Default is 'html'
-//debugger;
-
-		debug( editor, "anteOnBeforeSetContent", _mwtDebugFlags.anteOnBeforeSetContent, e.content );
-
-		// decode html entities in input if flag is set
-		if ( _decodeHtmlEntitiesOnInput ) {
-			e.content = htmlDecode( e.content );
-		}
+debugger;
 		// if the format is raw then don't process further
 		if (e.format == 'raw' ) {
 			return;
@@ -3843,6 +3746,13 @@
 		_showPlaceholders = editor.getParam("showPlaceholders");
 		_placeholderClass = _showPlaceholders ? "mwt-showPlaceholder" : "mwt-hidePlaceholder";
 
+		// if this is a new reference then ensure placeholder is displayed
+		if ( e.newRef != undefined ) {
+			if ( e.newRef == true ) {
+				_placeholderClass = "mwt-showPlaceholder";
+			}
+		}
+
 		// set format to raw so that the Tiny parser won't rationalise the html
 		e.format = 'raw';
 
@@ -3851,15 +3761,16 @@
 			e.content = _convertWiki2Html(e.content);
 		}
 
-		// sanitize the content to be sure xss vulnerabilities are removed
-		e.content = _sanitize( e.content );
-
-		debug( editor, "postOnBeforeSetContent", _mwtDebugFlags.postOnBeforeSetContent, e.content );
-
 /*		if ( e.initial ) {
 			e.content = '<p class="mwt-paragraph">' + e.content + '</p>';
 		}*/
 
+		// this bit of code should remove potential xss vulnerabilities 
+		var serializer = new tinymce.html.Serializer(),
+			parser = new tinymce.html.DomParser();
+			
+		e.content = serializer.serialize(parser.parse( e.content ));
+		
 		return;
 	}
 
@@ -3869,7 +3780,7 @@
 	 * @param {tinymce.SetContentEvent} e
 	 */
 	function _onSetContent(e) {
-//debugger;
+debugger;
 		
 		return;
 	}
@@ -3880,22 +3791,10 @@
 	 * @param {tinymce.SetContentEvent} e
 	 */
 	function _onBeforeExecCommand(e) {
-//debugger;
+debugger;
 		if ( e.command == "mceInsertContent" ) {
-
-			if ( e.value.newRef != undefined ) {
-				// if this is a new reference then ensure placeholder is displayed
-				if ( e.value.newRef == true ) {
-					_placeholderClass = "mwt-showPlaceholder";
-				}
-			}
-
-			// sanitize the conten to be sure xss vulnerabilities are removed
-//			e.value.content = _sanitize( e.value.content );
-
 			if (e.value.convert2html) {
 				e.value.content = _convertWiki2Html(e.value.content, e.value.mode);
-				e.value["format"] = 'raw';
 			}			
 		}
 
@@ -3910,7 +3809,7 @@
 	function _onBeforeGetContent(e) {
 		// generally we want to get the content of the editor
 		// unaltered by any html rationalisation!!!
-//debugger;
+debugger;
 			e.format = 'raw';
 		return;
 	}
@@ -3921,17 +3820,12 @@
 	 * @param {tinymce.ContentEvent} e
 	 */
 	function _onGetContent(e) {
-		var text = e.content;
-		
-		debug( editor, "anteOnGetContent", _mwtDebugFlags.anteOnGetContent, text );
-//debugger;
-		// sanitize the content to be sure xss vulnerabilities are removed
-		text = _sanitize( text );
-
+		var text;
+		text = e.content;
+debugger;
 		if (e.save == true) {
 			e.convert2wiki = true;
 		}
-		
 		if (e.convert2wiki) {
 			text = _convertHtml2Wiki( text );
 			e.convert2wiki = false;
@@ -3941,11 +3835,7 @@
 			// TinyMCE makes to the html, mainly as a result of forcing root blocks
 			text = text.replace(/<br class="mwt-emptylineFirst"><\/p>/gm,"</p>");
 		}
-
-		debug( editor, "postOnGetContent",_mwtDebugFlags.postOnGetContent, text );
-
 		e.content = text;
-
 		return;
 	}
 
@@ -3955,7 +3845,7 @@
 	 * @param {tinymce.LoadContentEvent} e
 	 */
 	function _onLoadContent(e) {
-//debugger;
+debugger;
 		return;
 	}
 
@@ -3965,7 +3855,7 @@
 	 * @param {tinymce.DropEvent} e
 	 */
 	function _onDrop(e) {
-//debugger;
+debugger;
 		return;
 	}
 
@@ -3976,14 +3866,9 @@
 	 */
 	function _onPastePreProcess(e) {
 		// if this is html then covert to wiki and back so it displays correctly
-//debugger;
+debugger;
 		var text = e.content,
 			textObject;
-
-		debug( editor, "anteOnPastePreProcess", _mwtDebugFlags.anteOnPastePreProcess, text );
-
-		// sanitize the conten to be sure xss vulnerabilities are removed
-//		text = _sanitize( text );
 
 		// wrap the text in an object and send it to event listeners
 		textObject = {text: text};
@@ -3994,8 +3879,6 @@
 		textObject = {text: text};
 		$(document).trigger('TinyMCEAfterPastePreProcess', [textObject]);
 		text = textObject.text;
-
-		debug( editor, "postOnPastePreProcess", _mwtDebugFlags.postOnPastePreProcess, text );
 
 		e.content = text;
 	}
@@ -4008,7 +3891,7 @@
 	function _onPastePostProcess(e) {
 		// check if this is the content of a drag/drop event
 		// if it is then no need to convert wiki to html
-//debugger;
+debugger;
 		var text,
 			$dom;
 
@@ -4068,44 +3951,14 @@
 	 * @param {tinymce.onKeyDownEvent} e
 	 */	
 	function _onKeyDown(evt) {
-		if ( evt.keyCode == 38 ) {
+		if (( evt.keyCode == 38 ) || ( evt.keyCode == 40 )) {
 			// up-arrow or down arrow at start or end of editor
 			// content results in an empty paragraph being added
 			var cursorLocation = _getCursorOffset();
 
 			_cursorOnDown = cursorLocation.cursor;
 			_cursorOnDownPreviousNode = cursorLocation.previousNode;
-			if (( _cursorOnDown == 0) && ( _cursorOnDownPreviousNode == null ))  {
-				// we are already at start of text
-				var el = editor.dom.create( 'p', { 'class' : 'mwt-notParagraph' }, '<br class="mwt-emptyline"/>' );
-				editor.getBody().insertBefore(el, editor.getBody().firstChild);
-				editor.selection.setCursorLocation();
-				evt.preventDefault();
-				evt.stopImmediatePropagation();
-				evt.stopPropagation();
-			}
-		} else if ( evt.keyCode == 40 ) {
-			// up-arrow or down arrow at start or end of editor
-			// content results in an empty paragraph being added
-			var cursorLocation = _getCursorOffset();
-
-			_cursorOnDown = cursorLocation.cursor;
 			_cursorOnDownNextNode = cursorLocation.nextNode;
-			var range = editor.selection.getRng();
-			editor.selection.select(tinyMCE.activeEditor.getBody(), true);
-			var ftxt = editor.selection.getRng().toString().trimRight().length;
-			editor.selection.setRng( range );
-			if (( _cursorOnDown >= ftxt ) && ( _cursorOnDownNextNode == null )) { 
-				// the cursor din't move forward
-				// we're already at the end of the text
-				var el = editor.dom.create( 'p', { 'class' : 'mwt-paragraph' }, '<br class="mwt-emptyline"/>' );
-				$(el).insertAfter(editor.getBody().lastChild);;
-				editor.selection.select( el );
-				editor.selection.collapse();
-				evt.preventDefault();
-				evt.stopImmediatePropagation();
-				evt.stopPropagation();
-			}
 		}
 	};
 
@@ -4117,12 +3970,12 @@
 	 * @param {tinymce.onKeyUpEvent} e
 	 */	
 	function _onKeyUp(evt) {
-/*		if ( evt.keyCode == 38 ) {
+		if ( evt.keyCode == 38 ) {
 			var cursorLocation = _getCursorOffset();
 
 			_cursorOnUp = cursorLocation.cursor;
 			_cursorOnUpPreviousNode = cursorLocation.previousNode;
-debugger;
+
 			if ( _cursorOnDown == _cursorOnUp) {
 				// cursor didn't move
 				if ( _cursorOnDown == 0) {
@@ -4159,7 +4012,7 @@ debugger;
 					editor.selection.select( editor.getBody(), true );
 					editor.selection.collapse();
 				}
-		}*/
+		}
 	};
 
 function wikiparser( editor ) {
@@ -4171,22 +4024,7 @@ function wikiparser( editor ) {
 	 * @param {string} url = the url of this tinyMCE plugin
 	 * @returns {String}
 	 */
-	this.init = function(editor, url) {
-		//
-		// see if we are in a template class  and set the pipe text accordingly
-		//
-		var isInTemplate = false;
-		
-		debug( editor, "anteOnBeforeSetContent", _mwtDebugFlags.anteOnBeforeSetContent, editor.settings );
-
-		_mwtTemplateClasses.forEach( function( aClass ) {
-			if ($(editor.targetElm).hasClass( aClass ) ) {
-				isInTemplate = true;
-			}
-		});
-		
-		_pipeText = isInTemplate ? '{{!}}' : '|';
-
+	this.init = function(ed, url) {
 		//
 		// set up functions that respond to events
 		//
@@ -4203,8 +4041,6 @@ function wikiparser( editor ) {
 		editor.on('dblclick', _onDblClick);
 		editor.on('keydown', _onKeyDown);
 		editor.on('keyup', _onKeyUp);
-		editor.on('undo', function() {debugger;});
-		editor.on('redo', function() {debugger;});
 
 		//
 		// add processing for browser context menu
@@ -4235,7 +4071,6 @@ function wikiparser( editor ) {
 				});
 			}
 		});
-		
 		//
 		// add processing for inserting empty <p> block before or after curent block
 		//

@@ -1229,6 +1229,11 @@
             selectionState.set(true);
           }
         });
+        // wikibase update - indents didn't work for pre set content
+        // start update
+        if ( item.dom().nodeName === '#text') return [];
+        // end wikibase update
+
         var currentItemEntry = createEntry(item, depth, selectionState.get());
         itemSelection.each(function (selection) {
           if (eq(selection.end, item)) {
