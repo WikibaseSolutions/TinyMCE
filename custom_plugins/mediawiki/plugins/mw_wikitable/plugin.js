@@ -6124,7 +6124,7 @@ debugger;
         styles['border-width'] = addSizeSuffix(data.border);
         styles['border-spacing'] = addSizeSuffix(data.cellspacing);
       } else {
-        attrs.border = data.border;
+        styles['border-width'] = addSizeSuffix(data.border);
         attrs.cellpadding = data.cellpadding;
         attrs.cellspacing = data.cellspacing;
       }

@@ -142,6 +142,7 @@ console.log(editor.selection.getNode());
 				items: [
 					{text: translate("tinymce-link-type-internal"), value: 'mwt-nonEditable mwt-wikiMagic mwt-internallink'},
 					{text: translate("tinymce-link-type-external"), value: 'mwt-nonEditable mwt-wikiMagic mwt-externallink'},
+          {text: "New page in this Hub" , value: 'mwt-nonEditable mwt-wikiMagic mwt-newlink mwt-internallink'},
 				]
 			};
 
@@ -166,15 +167,15 @@ console.log(editor.selection.getNode());
       if(nwz){
 
 var order = [
-  {text: "_blank" , value: 'mwt-target-blank'},
-{text: "_self", value: 'mwt-target-self'},
+  {text: "Open in a new window" , value: 'mwt-target-blank'},
+{text: "Open in the same window", value: 'mwt-target-self'},
 
 ];
 
 }else{
   var order = [
-    {text: "_self", value: 'mwt-target-self'},
-    {text: "_blank" , value: 'mwt-target-blank'},
+    {text: "Open in the same window", value: 'mwt-target-self'},
+    {text: "Open in a new window" , value: 'mwt-target-blank'},
 
   ];
 
@@ -244,6 +245,8 @@ var order = [
       if(changed.name == 'href'){
         var obj = api.getData()
         if(obj.class == 'mwt-nonEditable mwt-wikiMagic mwt-internallink'){
+          document.querySelector('[title="OK"]').classList.add('disabled');
+
             if(!autocompletebox){
               var fakeinput =  document.createElement('input');
 
@@ -257,6 +260,7 @@ var order = [
               autocompletebox.addEventListener('click', function(e){
                 formGroup.querySelector('input').value = e.target.getAttribute('data-value');
                 fakeinput.value = e.target.innerText;
+                  document.querySelector('[title="OK"]').classList.remove('disabled');
                 //remove autocomplete dropdown
                 autocompletebox.innerHTML = "";
               }, false)
@@ -272,6 +276,8 @@ var order = [
               formGroup.appendChild(autocompletebox)
 
               fakeinput.addEventListener('input', function(e){
+                document.querySelector('[title="OK"]').classList.add('disabled');
+
 
 
                // fill autocomplete dropdown
@@ -334,6 +340,19 @@ var order = [
       }
       if(changed.name == 'class'){
         var obj = api.getData()
+        document.querySelector('[title="OK"]').classList.remove('disabled');
+
+        document.querySelector('.tox-dialog').classList.remove('newlink');
+
+        document.querySelector('.tox-form > div:nth-child(2) label.tox-label').innerText = 'Link url/page';
+
+         if(obj.class == 'mwt-nonEditable mwt-wikiMagic mwt-newlink mwt-internallink'){
+          document.querySelector('.tox-dialog').classList.add('newlink');
+          document.querySelector('.tox-form > div:nth-child(2) label.tox-label').innerText = 'Title of new page';
+
+
+        }
+
         if(obj.class != 'mwt-nonEditable mwt-wikiMagic mwt-internallink'){
           console.log('ex');
           var  fakeinput =  document.querySelector('#fakeinput');
@@ -406,17 +425,23 @@ var order = [
 					aTarget = "<span class='newwin'>";
           aTargetTail = "</span>";
 				} else {
-					aTarget = '';
+					aTarget = '&nbsp;';
           aTargetTail = '';
 				}
 
 				if (data["class"].indexOf("mwt-internallink") > -1){
 						aLink = aLink.replace("_"," ");
+            var hub = document.querySelector('[name="Space[]"]').value;
+           if (data["class"].indexOf("mwt-newlink") > -1) {
+              	wikitext = "[[" + hub + ":" + aLink + "]]" + aTrail;
+           }else{
+
 					if (aLabel) {
 						wikitext = aTarget + "[[" + aLink + "|" + aLabel + "]]" + aTargetTail + aTrail;
 					} else {
 						wikitext = aTarget + "[[" + aLink + "]]" + aTargetTail + aTrail;
 					}
+        }
 				} else if (data["class"].indexOf("mwt-externallink") > -1) {
 					if (aLabel) {
 						wikitext = aTarget + "[" + aLink + " " + aLabel + "]" + aTargetTail + aTrail;
@@ -424,6 +449,7 @@ var order = [
 						wikitext = aTarget + "[" + aLink + "]" + aTargetTail + aTrail;
 					}
 				}
+
 
 				args = {format: 'wiki', mode: 'inline', convert2html: true};
 //0929				setSelection( editor, wikitext, args );
