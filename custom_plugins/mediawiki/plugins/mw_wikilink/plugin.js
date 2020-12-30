@@ -180,12 +180,7 @@ var order = [
   ];
 
 }
-      var targetListCtrl = {
-				name: 'target',
-				type: 'selectbox',
-				label: "Link target",
-				items: order
-			};
+
 
 			// for updating any link trails (see https://www.mediawiki.org/wiki/Help:Links)for the link
 			var trailCtrl = {
@@ -200,15 +195,13 @@ var order = [
 				classListCtrl,
 				linkCtrl,
 				labelCtrl,
-        targetListCtrl
-			];
+      			];
 
 			var linkTrailDialogItems = [
 				classListCtrl,
 				linkCtrl,
 				labelCtrl,
-        targetListCtrl,
-				trailCtrl
+      		trailCtrl
 			];
 
 			if ( initialData.trail ) {
@@ -233,6 +226,7 @@ var order = [
 				type: 'submit',
 				name: 'submitButton',
 				text: translate("tinymce-ok"),
+        disabled: true,
 				primary: true
 			}
 		];
@@ -240,7 +234,10 @@ var order = [
     var autocompletebox = false;
     var fakeinput = false;
 
+
 		var dialogChange = function( api, changed ) {
+      document.querySelector('[title="OK"]').disabled = false;
+
       var formGroup = document.querySelector('.tox-form .tox-form__group:nth-child(2)');
       if(changed.name == 'href'){
         var obj = api.getData()
