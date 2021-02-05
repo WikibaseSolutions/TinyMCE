@@ -1,18 +1,11 @@
 {
 	"@metadata": {
 		"authors": [
-			"DannyS712",
-			"Fitoschido",
-			"MarcoAurelio",
-			"Rodney Araujo"
+			"Fitoschido"
 		]
 	},
 	"tinymce-editsource": "Editar código",
 	"tinymce-editsectionsource": "editar código",
-	"tinymce-upload-alternate-text": "Texto alternativo",
-	"tinymce-upload-link": "Enlace",
-	"tinymce-upload-width": "Anchura",
-	"tinymce-upload-height": "Altura",
 	"tinymce-horizontal-align": "Alineación horizontal",
 	"tinymce-horizontal-align-left": "A la izquierda",
 	"tinymce-horizontal-align-centre": "Al centro",
@@ -28,7 +21,7 @@
 	"tinymce-source-local-file": "Insertar archivo existente",
 	"tinymce-insertbtn": "Insertar archivo existente",
 	"tinymce-openlink": "Abrir enlace",
-	"tinymce-wikimagic-title": "Ver y editar texto wiki",
+	"tinymce-wikimagic-title": "Plantillas del wiki, funciones del analizador sintáctico y palabras mágicas",
 	"tinymce-browsercontextmenu-title": "Menú contextual del navegador",
 	"tinymce-wikisourcecode": "Ver y editar el código fuente del wiki",
 	"tinymce-wikisourcecode-title": "Código fuente del wiki",
@@ -36,11 +29,15 @@
 	"tinymce-upload-title": "Cargar y mostrar archivo",
 	"tinymce-upload-title-general": "General",
 	"tinymce-upload-title-image": "Imagen",
+	"tinymce-upload-alternate-text": "Texto alternativo",
+	"tinymce-upload-link": "Enlace",
+	"tinymce-upload-width": "Anchura",
+	"tinymce-upload-height": "Altura",
 	"tinymce-upload-type-label": "Tipo de carga",
 	"tinymce-upload-type-label-file": "Archivo local",
 	"tinymce-upload-type-label-url": "URL",
 	"tinymce-upload-type-label-wiki": "Archivo en este wiki",
-	"tinymce-upload-source-label": "Origen",
+	"tinymce-upload-source-label": "Nombre de archivo de origen",
 	"tinymce-upload-destination-label": "Nombre de archivo de destino",
 	"tinymce-upload-title-label": "Título/leyenda",
 	"tinymce-upload-summary-label": "Resumen",
@@ -61,7 +58,6 @@
 	"tinymce-upload-format-frame-text": "Marco",
 	"tinymce-upload-format-frameless-text": "Sin marco",
 	"tinymce-upload-format-none-text": "Ninguno",
-	"tinymce-upload-button-label-overwrite": "Sobrescribir",
 	"tinymce-upload-alert-uploads-not-enabled": "Este wiki no tiene activadas las cargas",
 	"tinymce-upload-alert-destination-filename-not-allowed": "No se permite el nombre de archivo de destino",
 	"tinymce-upload-alert-destination-filename-already-exists": "Ya existe el nombre de archivo de destino",
@@ -75,14 +71,10 @@
 	"tinymce-link-link-list-label": "Lista de enlaces",
 	"tinymce-link-target-new-window": "Ventana nueva",
 	"tinymce-link-target-label": "Destino",
-	"tinymce-link-type-external": "Externo",
 	"tinymce-link-type-label": "Tipo",
 	"tinymce-link-page-not-found": "(la página no existe)",
 	"tinymce-link-link-button-tooltip": "Insertar/editar enlace",
 	"tinymce-link-link-remove-button-tooltip": "Quitar enlace",
 	"tinymce-link-open-link": "Abrir enlace",
-	"tinymce-link": "Enlace",
-	"tinymce-yes": "Sí",
-	"tinymce-no": "No",
-	"tinymce-cancel": "Cancelar"
+	"tinymce-link": "Enlace"
 }
