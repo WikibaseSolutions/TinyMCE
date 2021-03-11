@@ -4293,7 +4293,7 @@
 	 */
 	function _onLoadContent(e) {
 //		tinymce.activeEditor.on('ScriptsLoaded', function(e) {
-			var _toolbarResizeFactor = tinymce.activeEditor.getParam("toolbarResize");
+//			var _toolbarResizeFactor = tinymce.activeEditor.getParam("toolbarResize");
 	  
 			/**
 			 * dynamicallyAccessCSS 
@@ -4305,7 +4305,7 @@
 			 * @published 2016
 			 */
 			  
-			var returnStyleSheetRules = (function (){  
+/*			var returnStyleSheetRules = (function (){  
 				if(!document.styleSheets[0]){
 					// Create the <style> tag
 					var style = document.createElement("style");
@@ -4373,7 +4373,7 @@
 				thisRule.style.setProperty ("height", 34 * _toolbarResizeFactor + "px", "important");
 				thisRule.style.setProperty ("width", "auto", "important");
 			});
-//		});
+//		});*/
 
 		return;
 	}
@@ -4596,7 +4596,7 @@
 				previousNode = null,
 				nextNode = null,
 				firstNode = false;
-	
+
 			function getPreviousNode( aNode ) {
 				var previousNode = aNode.previousSibling,
 					parents = editor.dom.getParents( aNode );
@@ -4674,6 +4674,9 @@
 			// content results in an empty paragraph being added
 			var cursorLocation = getCursorOffset();
 
+			//if previous node is not null, carry on 
+			if ( cursorLocation.previousNode != null ) return;
+
 			_cursorOnDown = cursorLocation.cursor;
 			_cursorOnDownPreviousNode = cursorLocation.previousNode;
 			if (( _cursorOnDown == 0) && ( _cursorOnDownPreviousNode == null ))  {
@@ -4690,6 +4693,9 @@
 			// content results in an empty paragraph being added
 			var cursorLocation = getCursorOffset();
 
+			//if next node is not null, carry on 
+			if ( cursorLocation.nextNode != null ) return;
+			
 			_cursorOnDown = cursorLocation.cursor;
 			_cursorOnDownNextNode = cursorLocation.nextNode;
 			var range = editor.selection.getRng();
