@@ -1,7 +1,7 @@
 {
 	"@Note": "When updating this file please also update TinyMCE.php with the same changes.",
 	"name": "TinyMCE",
-	"version": "1.0",
+	"version": "1.0.11",
 	"author": [
 		"Ephox",
 		"Hallo Welt",
@@ -11,7 +11,7 @@
 	"url": "https://www.mediawiki.org/wiki/Extension:TinyMCE",
 	"descriptionmsg": "tinymce-desc",
 	"license-name": "GPL-2.0+",
-	"type": "hook",
+	"type": "editor",
 	"callback": "TinyMCEHooks::registerExtension",
 	"requires": {
 		"MediaWiki": ">= 1.31.0"
@@ -37,6 +37,8 @@
 				"ext.tinymce.core"
 			],
 			"messages": [
+				"tinymce-editcomment",
+				"tinymce-editreference",
 				"tinymce-upload",
 				"tinymce-upload-title",
 				"tinymce-upload-title-general",
@@ -50,8 +52,6 @@
 				"tinymce-upload-source-tooltip",
 				"tinymce-upload-destination-label",
 				"tinymce-upload-destination-tooltip",
-				"tinymce-upload-overwrite-label",
-				"tinymce-upload-overwrite-tooltip",
 				"tinymce-upload-title-label",
 				"tinymce-upload-title-tooltip",
 				"tinymce-upload-summary-label",
@@ -151,6 +151,10 @@
 				"tinymce-toggle-button-toggle-wiki-placeholders",
 				"tinymce-nonbreaking-insertNonBreakingSpace",
 				"tinymce-reference-insertReference",
+				"tinymce-empty-reference",
+				"tinymce-reference-enterReferenceContent",
+				"tinymce-reference-alert-not-allowed",
+				"tinymce-pre-alert-only-plain-text",
 				"tinymce-yes",
 				"tinymce-no",
 				"tinymce-ok",
@@ -172,8 +176,7 @@
 		"MakeGlobalVariablesScript": "TinyMCEHooks::setGlobalJSVariables",
 		"MagicWordwgVariableIDs": "TinyMCEHooks::addMagicWordVariableIDs",
 		"ParserAfterTidy": "TinyMCEHooks::handleMagicWords",
-		"SkinTemplateNavigation": "TinyMCEAction::displayTabAndModifyAddTopicLink",
-		"SkinTemplateTabAction": "TinyMCEHooks::modifyTalkPageLink",
+		"SkinTemplateNavigation::Universal": "TinyMCEAction::displayTabAndModifyAddTopicLink",
 		"SkinEditSectionLinks": "TinyMCEHooks::addEditSectionLink",
 		"AlternateEdit": "TinyMCEHooks::determineIfTinyMCEIsEnabled",
 		"EditPageBeforeEditToolbar": "TinyMCEHooks::removeDefaultToolbar",
@@ -181,7 +184,8 @@
 		"WikiEditorDisable": "TinyMCEHooks::disableWikiEditor",
 		"GetPreferences": "TinyMCEHooks::addPreference",
 		"PageForms::addRLModules": "TinyMCEHooks::addRLModules",
-		"OutputPageBeforeHTML": "TinyMCEHooks::addToViewPage"
+		"OutputPageParserOutput": "TinyMCEHooks::addToViewPage",
+    		"ParserFirstCallInit": "TinyMCEHooks::onParserFirstCallInit"
 	},
 	"Actions": {
 		"tinymceedit": "TinyMCEAction"

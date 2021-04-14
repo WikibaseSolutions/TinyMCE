@@ -25,7 +25,7 @@ if ( version_compare( $GLOBALS['wgVersion'], '1.31', '>' ) ) {
 			'Please use wfLoadExtension instead, ' .
 			'see https://www.mediawiki.org/wiki/Extension_registration for more details.'
 		); */
-		return;
+		return; 
 	}
 }
 
@@ -69,8 +69,7 @@ $GLOBALS['wgTinyMCEIP'] = dirname( __FILE__ );
 $GLOBALS['wgHooks']['MakeGlobalVariablesScript'][] = 'TinyMCEHooks::setGlobalJSVariables';
 $GLOBALS['wgHooks']['MagicWordwgVariableIDs'][] = 'TinyMCEHooks::addMagicWordVariableIDs';
 $GLOBALS['wgHooks']['ParserAfterTidy'][] = 'TinyMCEHooks::handleMagicWords';
-$GLOBALS['wgHooks']['SkinTemplateNavigation'][] = 'TinyMCEAction::displayTab';
-$GLOBALS['wgHooks']['SkinTemplateTabAction'][] = 'inyMCEHooks::modifyTalkPageLink';
+$GLOBALS['wgHooks']['SkinTemplateNavigation::Universal'][] = 'TinyMCEAction::displayTab';
 $GLOBALS['wgHooks']['SkinEditSectionLinks'][] = 'TinyMCEHooks::addEditSectionLink';
 
 if ( class_exists( 'MediaWiki\Linker\LinkRenderer' ) ) {
@@ -90,10 +89,6 @@ $GLOBALS['wgHooks']['OutputPageBeforeHTML'][] = 'TinyMCEHooks::addToViewPage';
 
 $GLOBALS['wgAutoloadClasses']['TinyMCEHooks'] = __DIR__ . '/TinyMCE.hooks.php';
 $GLOBALS['wgAutoloadClasses']['TinyMCEAction'] = __DIR__ . '/TinyMCEAction.php';
-#$GLOBALS['wgAutoloadClasses']['TinyMCEUploadForm'] = __DIR__ . '/upload/TinyMCEUploadForm.php';
-#$GLOBALS['wgAutoloadClasses']['TinyMCEUploadSourceField'] = __DIR__ . '/upload/TinyMCEUploadSourceField.php';
-#$GLOBALS['wgAutoloadClasses']['TinyMCEUploadWindow'] = __DIR__ . '/upload/TinyMCEUploadWindow.php';
-#$GLOBALS['wgSpecialPages']['TinyMCEUploadWindow'] = 'TinyMCEUploadWindow';
 
 $GLOBALS['wgActions']['tinymceedit'] = 'TinyMCEAction';
 
@@ -111,9 +106,10 @@ $GLOBALS['wgResourceModules'] += array(
 		'styles' => 'MW_tinymce.css',
 		'dependencies' => array(
 			'ext.tinymce.core',
-#			'ext.tinymce.fancybox'
 		),
 		'messages' => array(
+			'tinymce-editcomment',
+			'tinymce-editreference',
 			'tinymce-upload',
 			'tinymce-upload-title',
 			'tinymce-upload-title-general',
@@ -127,8 +123,6 @@ $GLOBALS['wgResourceModules'] += array(
 			'tinymce-upload-source-tooltip',
 			'tinymce-upload-destination-label',
 			'tinymce-upload-destination-tooltip',
-			'tinymce-upload-overwrite-label',
-			'tinymce-upload-overwrite-tooltip',
 			'tinymce-upload-title-label',
 			'tinymce-upload-title-tooltip',
 			'tinymce-upload-summary-label',
@@ -226,8 +220,12 @@ $GLOBALS['wgResourceModules'] += array(
 			'tinymce-link',
 			'tinymce-insert-linebreak',
 			'tinymce-toggle-button-toggle-wiki-placeholders',
-			"tinymce-nonbreaking-insertNonBreakingSpace",
+			'tinymce-nonbreaking-insertNonBreakingSpace',
 			'tinymce-reference-insertReference',
+			'tinymce-reference-enterReferenceContent',
+			'tinymce-empty-reference',
+			'tinymce-reference-alert-not-allowed',
+			'tinymce-pre-alert-only-plain-text',
 			'tinymce-yes',
 			'tinymce-no',
 			'tinymce-ok',
@@ -237,11 +235,6 @@ $GLOBALS['wgResourceModules'] += array(
 	'ext.tinymce.core' => $wgTinyMCEResourceTemplate + array(
 		'scripts' => 'tinymce/tinymce.js'
 	),
-#	'ext.tinymce.fancybox' => $wgTinyMCEResourceTemplate + array(
-#		'scripts' => 'fancybox/jquery.fancybox.js',
-#		'styles' => 'fancybox/jquery.fancybox.css',
-#		'dependencies' => 'ext.tinymce.browser'
-#	),
 	'ext.tinymce.browser' => $wgTinyMCEResourceTemplate + array(
 		'scripts' => 'jquery.browser.js'
 	)

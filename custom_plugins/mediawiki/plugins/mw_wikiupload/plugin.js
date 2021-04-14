@@ -15,6 +15,8 @@ tinymce.PluginManager.add('wikiupload', function(editor) {
 
 	var	editor = tinymce.activeEditor;
 
+	var allow_external_targets = editor.getParam("link_allow_external_targets");
+	
 	var utility = editor.getParam("wiki_utility");
 	
 	var setSelection = utility.setSelection;
@@ -661,8 +663,16 @@ tinymce.PluginManager.add('wikiupload', function(editor) {
 				}
 				wikitext += "]]";
 
-				var	editor = tinymce.activeEditor;
+				var	editor = tinymce.activeEditor,
+					parentNode;
 				editor.focus( );
+				// OK this was interesting.  Insert an image in a <p> block that is preserved html
+				// within a table cell that isn't preserved html, removes the <p> block and also
+				// makes the cell preserved html - which breaks stuff.  This traps this condition
+/*				if (tinymce.DOM.is( editor.selection.getNode(), 'P' )) {
+//					tinymce.DOM.removeClass( editor.selection.getNode(), 'mwt-preserveHtml' );
+					tinymce.DOM.rename( editor.selection.getNode(), 'div' );
+				}*/
 				editor.insertContent(wikitext, {format: 'wiki', convert2html: 'true', mode: 'inline'} );
 				editor.focus( );
 				editor.nodeChanged();	
@@ -1148,7 +1158,6 @@ tinymce.PluginManager.add('wikiupload', function(editor) {
 
 					return;
 				}
-debugger;
 				dialogData = cleanSubmittedData( dialogData );
 				uploadDetails = [];
 				result = [];
@@ -1224,10 +1233,20 @@ debugger;
 
 			var makeDialog = function ( uploadDialogBody, initialData, action ) {
 				var footerButtons = dialogButtons;
-				
+
+				if ( !allow_external_targets ) {
+					// remove the link item if extenal links not allowed
+					if ( uploadDialogBody.tabs ) { 
+						uploadDialogBody.tabs[1].items.splice(2,1);
+					} else {
+						uploadDialogBody.items.splice(2,1);					
+					}
+				}
+
 				if ( action == 'overwrite' ) {
 					footerButtons = overwriteDialogButtons;
 				}
+
 				return {
 					title: translate( "tinymce-upload-title" ),
 					size: 'normal',
@@ -1242,6 +1261,12 @@ debugger;
 			};
 
 			var makeOverwriteDialog = function ( uploadDialogBody, initialData ) {
+
+				if ( !allow_external_targets ) {
+					// remove the link item if extenal links not allowed
+					uploadDialogBody.tabs[1].items.splice(2,1);
+				}
+
 				return {
 					title: translate( "tinymce-upload-title" ),
 					size: 'normal',

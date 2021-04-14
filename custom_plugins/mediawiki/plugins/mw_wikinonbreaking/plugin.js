@@ -40,6 +40,7 @@
 	var registerButtons = function (editor) {
 		editor.ui.registry.addButton('nonbreaking', {
 			icon: 'non-breaking',
+			shortcut: 'Meta+K' + 32,
 			tooltip: translate( 'tinymce-nonbreaking-insertNonBreakingSpace' ),
 			onAction: function () {
 				return editor.execCommand('mwt-nonBreaking');
@@ -52,20 +53,33 @@
 				return editor.execCommand('mwt-nonBreaking');
 			}
 		});
+		editor.shortcuts.add('Meta+' + 32, 'insert non breaking space', function () {
+			editor.execCommand('mwt-nonBreaking');
+		});
 	};
 
     var setup = function (editor) {
 		editor.on('keydown', function (evt) {
-			if ( evt.keyCode == 32 ) {
+			if ( evt.keyCode == 32 ) { // space key pressed
 				var html,
 					args,
 					element,
 					outerHTML;
+
 				if (( evt.ctrlKey == true ) && ( evt.shiftKey == true )) {
 					editor.execCommand('mwt-nonBreaking');
+					evt.preventDefault();
 				}
-				return true;
+			} else if ( event.keyCode == 9 ) { // tab pressed
+				if (( evt.ctrlKey == true ) && ( evt.shiftKey == true )) {
+ 					editor.execCommand( 'mceInsertContent', false, '&emsp;&emsp;' ); // inserts tab
+					evt.preventDefault();
+					evt.stopImmediatePropagation();
+					evt.stopPropagation();
+					return false;
+				}
 			}
+			return true;
 		});
     };
 

@@ -6,6 +6,19 @@
 	display: none;
 }
 
+.rvs-note {
+	padding: 10px 10px 10px 10px;
+	min-height: 15px;
+	font-size: 14px;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	margin-left: 30px;
+	margin-right: 20px;
+	-webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.19);
+	-moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.19);
+	box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.19);
+}
+
 .mce-item-table th {
     display: table-cell;
     vertical-align: inherit;
@@ -27,12 +40,42 @@ thead{
     text-align: center;
 }
 
+.client-nojs #ca-ve-edit, .client-nojs .mw-editsection-divider, .client-nojs .mw-editsection-visualeditor, .ve-not-available #ca-ve-edit, .ve-not-available .mw-editsection-divider, .ve-not-available .mw-editsection-visualeditor {
+	display: initial;
+}
+
 .mceEditable {
 	border: 1px dotted #0000cc;
 }
 
 #wpTextbox1_ifr {
 	background-color: #FFF;
+}
+
+/*div#mwext-tinytoolbar {
+  position: -webkit-sticky; /* Safari */
+/*  position: sticky;
+  top: -30px;
+  height: 32px
+}*/
+
+.tox-tbtn {
+/*    transform: scale(1); /* you can set the scale that you want
+    height: unset;
+    width: unset;*/
+}
+
+.tox .tox-tbtn--bespoke .tox-tbtn__select-label {
+/*    height: unset;
+    width: unset;*/
+}
+
+.tox .tox-toolbar, .tox .tox-toolbar__overflow, .tox .tox-toolbar__primary {
+  /* change the background y-positionning to : bottom 0*/
+/*	background: url("data:image/svg+xml;charset=utf8,%3Csvg height='39px' viewBox='0 0 40 39px' width='40' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='38px' width='100' height='1' fill='%23cccccc'/%3E%3C/svg%3E") left 0 bottom 0 #fff !important;*/
+	background-image: unset !important;
+	background-color: #fff !important;
+	border-bottom: 1px solid #ccc;
 }
 
 body.mce-content-body {
@@ -73,6 +116,24 @@ p {
     list-style-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAYAAAAJCAYAAAARml2dAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAABUSURBVAiZdY4xDsAgFELB2J0DdnbwQI5OHvDfgC62SY0yvhAetI1dWEq5JN0kKwDYbhEx8oT9a5JdEtLb/M2QNW0FAJLttkLbLUfEkIRVztPdo+MBm8UkW9Zxc20AAAAASUVORK5CYII=)\9;
 }*/
 
+div[contenteditable="true"]:hover::after {
+    display: inline-block;
+    text-rendering: auto;
+    text-decoration: none;
+	content:  "\270E";
+    font-size: 14px;
+	border: none;
+  position: absolute;
+  left: -15px;
+  top: -15px;
+  opacity: 1;
+  z-index: 1;
+}
+
+/*div[contenteditable="true"]:hover {
+    background-color: #f8f9fa;
+}*/
+
 div.mwt-paragraph {
 /*	display: inline-block;*/
 }
@@ -86,12 +147,21 @@ div.mwt-unknown {
 	display: inline-block;
 }
 
+.mwt-externallink {
+	display: inline-block;
+}
+
+.mwt-internallink {
+	display: inline-block;
+}
+
 .mwt-showPlaceholder.mwt-singleLinebreak {
 	display: inline-block;
 }
 
 .mwt-hidePlaceholder.mwt-singleLinebreak {
-	display: none;
+/*	display: none;*/
+	visibility: hidden
 }
 
 .mwt-showPlaceholder.mwt-slbltr:before {
@@ -99,7 +169,7 @@ div.mwt-unknown {
 }
 
 .mwt-hidePlaceholder.mwt-slbltr:before {
-	content:  "\00A0";
+/*	content:  "\00A0";*/
 }
 
 .mwt-showPlaceholder.mwt-slbrtl:before {
@@ -107,11 +177,19 @@ div.mwt-unknown {
 }
 
 .mwt-hidePlaceholder.mwt-slbrtl:before {
-	content:  "\00A0";
+/*	content:  "\00A0";*/
 }
 
-.mwt-showPlaceholder.mwt-comment:before {
+/*.mwt-showPlaceholder.mwt-comment:before {
 	content:  "\1F4AC";
+}
+
+.mwt-hidePlaceholder.mwt-comment {
+ 	display:  none;
+}*/
+
+.mwt-showPlaceholder.mwt-comment {
+ 	display:  inline;
 }
 
 .mwt-hidePlaceholder.mwt-comment {
@@ -120,10 +198,6 @@ div.mwt-unknown {
 
 .mwt-showPlaceholder.mwt-switch:before {
 	content:  "\00A7";
-}
-
-.mwt-hidePlaceholder.mwt-comment {
-	display:  none;
 }
 
 .mwt-showPlaceholder.mwt-image:before {
@@ -160,19 +234,52 @@ div.mwt-unknown {
 	content:  "\00A0";
 }
 
-.mwt-showPlaceholder.mwt-reference::before {
-  content: "[\2021\00A0";
+/*.mwt-showPlaceholder.mwt-reference::before {
+  content: "[\00A0";
   color: red;
 }
 
 .mwt-showPlaceholder.mwt-reference::after {
 	content: "\00A0]";
 	color: red;
-}
+}*/
 
 .mwt-hidePlaceholder.mwt-reference {
 	display:  none;
 }
+
+.mwt-hidePlaceholder.mwt-comment {
+	display:  none;
+}
+
+.mwt-hidePlaceholder.mwt-commentHolder{
+	display:  none;
+}
+
+.mwt-reference {
+	display:  none;
+}
+
+.mwt-comment {
+	display:  none;
+}
+
+.mwt-showReference {
+/*	display:  inline;*/
+ 	display:  inline-block;
+}
+
+/*.mwt-showReference::before {
+  content: "[\00A0";
+  color: red;
+}
+
+.mwt-showReference::after {
+	content: "\00A0]";
+	color: red;
+}*/
+
+
 
 .mwt-nonEditable {
 /*	display: inline-block;*/
@@ -219,7 +326,17 @@ div.mwt-unknown {
 }
 
 .mwt-hidePlaceholder.mwt-nonEditable.mwt-placeHolder {
-	padding: 2px;
+/*	padding: 2px;*/
+	position: relative;
+}
+
+.mwt-nowiki {
+/*    background-color: #f8f9fa;*/
+    border: 1px solid #eaecf0;
+    border-radius: 2px;
+	display: inline-block;
+	padding: 1px;
+	opacity: 1.7 !important;
 	position: relative;
 }
 
@@ -280,6 +397,83 @@ pre {
     white-space: pre-wrap;
 }
 
+.mwt-referenceHolder::before {
+	display: inline-block;
+	content:  "[n]";
+	vertical-align:super;  
+	font-size: small; 
+}
+
+.mwt-referenceHolder {
+	display: inline-block;
+	color: inherit;
+    background-color: inherit;
+    border: none;
+	margin: 0px;
+    line-height: inherit;
+    white-space: pre-wrap;
+    padding: inherit;
+}
+
+.mwt-reference.mwt-showReference {
+	display: inline-block;
+	color: inherit;
+    background-color: #f8f9fa;;
+    border:  1px solid red;
+	margin: 4px;
+    line-height: inherit;
+    white-space: pre-wrap;
+    padding: 4px;
+}
+
+.mwt-reference {
+	color: inherit;
+    background-color: inherit;
+    border: none;
+	margin: 0px;
+    line-height: inherit;
+    white-space: pre-wrap;
+    padding: inherit;
+}
+
+.mwt-commentHolder::before {
+	content:  "\1F4AC";
+	vertical-align:super;  
+	font-size: small; 
+}
+
+.mwt-commentHolder {
+	display: inline-block;
+	color: inherit;
+    background-color: inherit;
+    border: none;
+	margin: 0px;
+    line-height: inherit;
+    white-space: pre-wrap;
+    padding: inherit;
+}
+
+.mwt-comment.mwt-showReference {
+	display: inline-block;
+	color: inherit;
+    background-color: #f8f9fa;;
+    border:  1px solid red;
+	margin: 4px;
+    line-height: inherit;
+    white-space: pre-wrap;
+    padding: 4px;
+}
+
+.mwt-comment {
+	color: inherit;
+    background-color: inherit;
+    border: none;
+	margin: 0px;
+    line-height: inherit;
+    white-space: pre-wrap;
+    padding: inherit;
+}
+
 code {
     color: #000;
     background-color: #f8f9fa;
@@ -291,6 +485,15 @@ code {
 
 nowiki {
 	content: "<nowiki />"
+}
+
+.mw-references-wrap {
+	pointer-events:none !important;;
+    background-color: #f8f9fa;
+    border: 1px solid #eaecf0;
+    border-radius: 2px;
+    padding: 1px 4px;
+	opacity: 0.7 !important;
 }
 
 div.mce-throbber{
