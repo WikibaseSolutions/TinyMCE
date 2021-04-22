@@ -844,7 +844,7 @@
         var escapedText = escapeSearchText(text, wholeWord);
         var pattern = {
             // regex: new RegExp(escapedText, matchCase ? 'g' : 'gi'),
-            regex: /([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\b)|([0-9]{9}\/[0-9]\/[a-z][0-9]\b)|([0-9]{9}\/[0-9]\b)|([0-9]+HLAR[0-9]{3,}\b)|(G[0-9]{8}\b)/gi,
+            regex: /([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\b)|([0-9]{9}\/[0-9]\/[a-z][0-9]\b)|([0-9]{9}\/[0-9]\b)|([0-9]+HLAR[0-9]{3,}\b)|(G[0-9]{8}\b)|(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{4,8})/gi,
             matchIndex: 1
         };
         var count = markAllMatches(editor, currentSearchState, pattern, inSelection);

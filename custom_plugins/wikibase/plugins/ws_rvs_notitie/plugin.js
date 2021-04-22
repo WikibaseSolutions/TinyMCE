@@ -64,14 +64,20 @@ var WsRvsNotitie = function(editor) {
                     let temp = $(`<div>${sel}</div>`);
                     if ( temp ) {
                         var $sel = $(temp);
-                        $($sel).each(function(i, el) {
-                            console.log(el);
-                            if ( $(el).is('p') ) {
-                                $(el).replaceWith(function (e) {
-                                    return this.innerHTML;
-                                });
-                            }
-                        });
+
+                        var replaceIfP = function(arr) {
+                            if ( arr.length === 0 ) return;
+                            $(arr).each(function(i, elm) {
+                                if ( $(elm).is('p') ) {
+                                    $(elm).replaceWith(function (e) {
+                                        return this.innerHTML;
+                                    });
+                                }
+                            });
+                            replaceIfP($(arr).children());
+                        }
+                        replaceIfP($sel);
+
                         console.log({
                             sel: sel,
                             $sel: $sel
