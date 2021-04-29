@@ -534,11 +534,14 @@ class TinyMCEHooks {
 			return;
 		}
 
-/*2403		if (( self::enableTinyMCE( $output->getTitle(), $context ) ) ||
-			( substr( $output->getTitle()->getBaseText(), 0, 8 ) == 'FormEdit' )) {*/
+		self::enableTinyMCE( $output->getTitle(), $context );
+		$GLOBALS['wgTinyMCEEnabled'] = true;
+		$output->addModules( 'ext.tinymce' );
+/*0422		if (( self::enableTinyMCE( $output->getTitle(), $context ) ) ||
+			( substr( $output->getTitle()->getBaseText(), 0, 8 ) == 'FormEdit' )) {
 			$GLOBALS['wgTinyMCEEnabled'] = true;
 			$output->addModules( 'ext.tinymce' );
-/*2403		} else {
+		} else {
 			$GLOBALS['wgTinyMCEEnabled'] = false;
 		}*/
 	}
