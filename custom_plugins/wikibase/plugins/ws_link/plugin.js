@@ -8,7 +8,17 @@ var
      *     text: Insert test
      * }
      */
-    wsTinyMCEModals = mw.config.get('wgWsTinyMCEModals');
+    wsTinyMCEModals = mw.config.get('wgWsTinyMCEModals'),
+    /**
+     * all the html tags
+     * @type {any[]}
+     */
+    _tags4Html = {},
+    /**
+     * all the wiki tags
+     * @type {any[]}
+     */
+    _tags4Wiki = {};
 
 var Ws_Link = function(editor) {
     "use strict";
@@ -67,18 +77,7 @@ var Ws_Link = function(editor) {
          * @type {string}
          */
         iframeName = 'ws_link_form',
-        /**
-         * all the html tags
-         * @type {any[]}
-         * @private
-         */
-        _tags4Html = {},
-        /**
-         * all the wiki tags
-         * @type {any[]}
-         * @private
-         */
-        _tags4Wiki = {},
+
         _tags4Replace = {},
         _tags4Template = {},
         _idsArray = [];
@@ -166,7 +165,7 @@ var Ws_Link = function(editor) {
         if ( editParams) {
             templateCall = `{{${name}|${editParams}}}`;
         }
-        console.log(templateCall);
+
         var editTemplate = name.slice(name.indexOf(':') + 1);
         // render the template
         var dialogApi = editor.windowManager.open(buildDialogSpec(`${text} invoegen`,[], {
@@ -175,7 +174,6 @@ var Ws_Link = function(editor) {
         dialogApi.block('Loading...');
 
         api.parse(templateCall, {}).done(function(data) {
-            console.log(data);
             var content = getPreviewContent(data);
             $(content).find('script[src*="WSForm.general.js"]').remove();
             var bodyItems = [
@@ -468,7 +466,6 @@ var Ws_Link = function(editor) {
         tagWikiText = _recoverPlaceholders2Wiki( tagWikiText );
         tagHTML = _recoverPlaceholders2Html( tagHTML );
 
-
         //  create id for new dom element, which wil also be the placeholder
         // temporarily inserted in the text to avoid conversion problems
 
@@ -515,13 +512,8 @@ var Ws_Link = function(editor) {
 
         // preserve the wiki text and html in arrays for later substitution
         // for the relevant placeholder
-        console.log({
-            _tags4Html: _tags4Html,
-            _tags4Wiki: _tags4Wiki
-        });
         _tags4Wiki[id] = tagWikiText;
         _tags4Html[id] = tagOuterHTML;
-
         return id;
     }
 
@@ -642,7 +634,6 @@ var Ws_Link = function(editor) {
         textObject = {text: text, isAdded: true};
         $(document).trigger('TinyMCEBeforeWikiToHtml', [textObject]);
         text = textObject.text;
-
         // substitute {{!}} with | if text is part of template
         if ( _pipeText == '{{!}}' ) {
             text = text.replace(/{{!}}/gmi, "|");
@@ -652,7 +643,6 @@ var Ws_Link = function(editor) {
         text = text.replace(/\r\n/gmi, "\n");
         // cleanup linebreaks in tags except comments
         text = text.replace(/(<[^!][^>]+?)(\n)([^<]+?>)/gi, "$1$3");
-
         // convert and preserve links and images
         text = _preserveLinks4Html(text);
 
@@ -911,12 +901,6 @@ var Ws_Link = function(editor) {
             editTemplate = 'Template:' + $(selectNode).data('mwt-edittemplate'),
             title = $(selectNode).data('mwt-type');
 
-        console.log({
-            selectNode: selectNode,
-            editTemplate: editTemplate,
-            title: title
-        })
-
         openDialog(editTemplate, title, title, $(selectNode).data('mwt-editparams'));
     }
 
@@ -1028,8 +1012,11 @@ var Ws_Link = function(editor) {
         var $dom = $( "<div id='tinywrapper'>" + data.text + "</div>", "text/xml" );
         $dom.find("*[class*='mwt-ws-link']").replaceWith(function (i, el) {
             var _tag = _tags4Wiki[this.id];
-            _tag = _tag.replace(/\|/gi, '{{#}}');
-            return _tag;
+            if ( _tag ) {
+                _tag = _tag.replace(/\|/gi, '{{#}}');
+                return _tag;
+            }
+            return el;
         });
         data.text = $dom.html();
         return data;
