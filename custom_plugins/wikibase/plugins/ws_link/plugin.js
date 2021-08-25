@@ -219,6 +219,7 @@ var Ws_Link = function(editor) {
 
     };
 
+
     // Add a button that opens a window
     editor.ui.registry.addMenuButton('wslink', {
         text: 'Insert',
@@ -232,11 +233,36 @@ var Ws_Link = function(editor) {
         text: 'Insert',
         context: 'wslink',
         prependToContext: true,
-        onAction: function() {
+        onAction: function(e) {
             // Open window
             var node = editor.selection.getNode();
             if ( $(node).hasClass('mwt-ws-non-editable') ) {
                 showWsLinkDialog();
+            }
+        }
+    });
+
+    editor.ui.registry.addButton('wslinkdelete', {
+        text: 'Cancel',
+        context: 'wslinkdelete',
+        prependToContext: true,
+        onAction: function () {
+            console.log('cancel is called');
+        }
+    });
+
+    editor.ui.registry.addMenuItem('wslinkdelete', {
+        text: 'Link annuleren',
+        icon: 'link',
+        context: 'wslinkdelete',
+        prependToContext: true,
+        onAction: function () {
+            var node = editor.selection.getNode();
+            if ( $(node).hasClass('mwt-ws-non-editable') ) {
+                var answer = confirm('Weet je zeker dat je deze link wilt annuleren?');
+                if ( answer ) {
+                    $(node).replaceWith($(node).text());
+                }
             }
         }
     });
