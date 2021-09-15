@@ -215,6 +215,9 @@ var Ws_Link = function(editor) {
                     setUpIFrameWssos(iframe);
                 }
             })
+        }).fail(function (err) {
+            console.warn(err);
+            editor.windowManager.close();
         });
 
     };
@@ -669,6 +672,7 @@ var Ws_Link = function(editor) {
         text = text.replace(/\r\n/gmi, "\n");
         // cleanup linebreaks in tags except comments
         text = text.replace(/(<[^!][^>]+?)(\n)([^<]+?>)/gi, "$1$3");
+
         // convert and preserve links and images
         text = _preserveLinks4Html(text);
 
@@ -863,6 +867,7 @@ var Ws_Link = function(editor) {
                     'wrapoutputclass': '',
                     'format': 'json',},
                 parserResult = [];
+
             $.ajax({
                 type: 'POST',
                 dataType: "json",
