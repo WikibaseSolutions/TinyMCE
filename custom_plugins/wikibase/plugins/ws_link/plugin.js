@@ -215,9 +215,13 @@ var Ws_Link = function(editor) {
                     setUpIFrameWssos(iframe);
                 }
             })
+        }).fail(function (err) {
+            console.warn(err);
+            editor.windowManager.close();
         });
 
     };
+
 
     // Add a button that opens a window
     editor.ui.registry.addMenuButton('wslink', {
@@ -232,11 +236,36 @@ var Ws_Link = function(editor) {
         text: 'Insert',
         context: 'wslink',
         prependToContext: true,
-        onAction: function() {
+        onAction: function(e) {
             // Open window
             var node = editor.selection.getNode();
             if ( $(node).hasClass('mwt-ws-non-editable') ) {
                 showWsLinkDialog();
+            }
+        }
+    });
+
+    editor.ui.registry.addButton('wslinkdelete', {
+        text: 'Cancel',
+        context: 'wslinkdelete',
+        prependToContext: true,
+        onAction: function () {
+            console.log('cancel is called');
+        }
+    });
+
+    editor.ui.registry.addMenuItem('wslinkdelete', {
+        text: 'Link annuleren',
+        icon: 'link',
+        context: 'wslinkdelete',
+        prependToContext: true,
+        onAction: function () {
+            var node = editor.selection.getNode();
+            if ( $(node).hasClass('mwt-ws-non-editable') ) {
+                var answer = confirm('Weet je zeker dat je deze link wilt annuleren?');
+                if ( answer ) {
+                    $(node).replaceWith($(node).text());
+                }
             }
         }
     });
@@ -643,6 +672,7 @@ var Ws_Link = function(editor) {
         text = text.replace(/\r\n/gmi, "\n");
         // cleanup linebreaks in tags except comments
         text = text.replace(/(<[^!][^>]+?)(\n)([^<]+?>)/gi, "$1$3");
+
         // convert and preserve links and images
         text = _preserveLinks4Html(text);
 
@@ -837,6 +867,7 @@ var Ws_Link = function(editor) {
                     'wrapoutputclass': '',
                     'format': 'json',},
                 parserResult = [];
+
             $.ajax({
                 type: 'POST',
                 dataType: "json",
