@@ -135,6 +135,7 @@ var wikilink = function (editor) {
 
 		var dialogBody = function ( initialData ) {
 
+
 			// for inputing the type of link, internal or external
 			var classListCtrl = {
 				name: 'class',
