@@ -98,6 +98,14 @@
      * @returns {string}
      */
     var createLinkTemplate = function(id) {
+        var adviceLinksFormat = [
+            '(W[0-9]{2}.[0-9]{2}.[0-9]{4}\\b)'
+        ];
+
+        if ( new RegExp(adviceLinksFormat.join('|', 'gi')).test(id) ) {
+            return `{{Link|Advies|${id}}}`;
+        }
+
         return '{{Link|Uitspraak|' + id + '}}';
     }
 
@@ -842,9 +850,30 @@
     };
     var find$2 = function (editor, currentSearchState, text, matchCase, wholeWord, inSelection) {
         var escapedText = escapeSearchText(text, wholeWord);
+
+        var allowedLinksFormats = [
+            // <1 letter><2 digits>.<2 digits>.<4 digits>
+            '([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\\b)',
+
+            // <9 digits>/<1 digit>(/<1 letter><1 digit> could be more times)
+            '([0-9]{9}\\/[0-9](\\/[a-z][0-9])+\\b)',
+
+            // <9 digits>/<1 digits>
+            '([0-9]{9}\\/[0-9]\\b)',
+
+            // <1+ digits>HLAR<3+ digits>
+            '([0-9]+HLAR[0-9]{3,}\\b)',
+
+            // G<8 digits>
+            '(G[0-9]{8}\\b)',
+
+            // ECLI:NL:<1-5 digits>:<4 digits>:<1-8 digits/letters>
+            '(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{1,8})'
+        ];
+
         var pattern = {
-            // regex: new RegExp(escapedText, matchCase ? 'g' : 'gi'),
-            regex: /([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\b)|([0-9]{9}\/[0-9]\/[a-z][0-9]\b)|([0-9]{9}\/[0-9]\b)|([0-9]+HLAR[0-9]{3,}\b)|(G[0-9]{8}\b)|(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{4,8})/gi,
+            regex: new RegExp(allowedLinksFormats.join('|'),'gi'),
+            // regex: /([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\b)|([0-9]{9}\/[0-9](\/[a-z][0-9])+\b)|([0-9]{9}\/[0-9]\b)|([0-9]+HLAR[0-9]{3,}\b)|(G[0-9]{8}\b)|(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{4,8})/gi,
             matchIndex: 1
         };
         var count = markAllMatches(editor, currentSearchState, pattern, inSelection);
