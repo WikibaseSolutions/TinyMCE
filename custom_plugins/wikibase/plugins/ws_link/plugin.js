@@ -31,12 +31,12 @@ var Ws_Link = function(editor) {
         /**
          *
          * global used to store the form of pipe used in the original wikicode
-         * Set to '{{!}}' or '|' depending on whether the target text is in
+         * Set to '{{#}}' or '|' depending on whether the target text is in
          * a template or not
          * default '|'
          * @type String
          */
-        _pipeText = ($(editor.targetElm).hasClass('mcePartOfTemplate')) ? '{{!}}' : '|',
+        _pipeText = ($(editor.targetElm).hasClass('mcePartOfTemplate')) ? '{{#}}' : '|',
         /**
          *
          * string for inserting a placeholder in editor text for
@@ -164,6 +164,24 @@ var Ws_Link = function(editor) {
         // if the editParams are filled is an edit action
         if ( editParams) {
             templateCall = `{{${name}|${editParams}}}`;
+        } else if (editor.selection) {
+            const $sel = $('<div></div>').html(editor.selection.getContent(editor, {}));
+            let selectionText = '';
+            $sel[0].childNodes.forEach((node, index) => {
+                let t = '';
+
+                // check if node is text
+                if ( node.nodeType === 3 )  {
+                    t = node.nodeValue;
+                    if ( t === '\n' ) t = ' ';
+                } else {
+                    t = node.innerText;
+                }
+
+                selectionText += t;
+            });
+
+            templateCall = `{{${name}|TinymceSelectedText=${selectionText}}}`;
         }
 
         var editTemplate = name.slice(name.indexOf(':') + 1);
@@ -519,10 +537,14 @@ var Ws_Link = function(editor) {
             // create DOM element from tagHTML
             element = $(tagHTML);
             element.addClass("mwt-ws-non-editable mwt-" + tagClass);
+
+            // make sure first char is uppercase
+            const normalTagClass = tagClass[0].toUpperCase() + tagClass.slice(1);
+
             element.attr({
                 'id': id,
                 'title': titleWikiText ,
-                'data-mwt-type': tagClass,
+                'data-mwt-type': normalTagClass,
                 'data-mwt-wikitext': titleWikiText,
                 'draggable': "true",
                 'contenteditable': "false"
@@ -663,9 +685,9 @@ var Ws_Link = function(editor) {
         textObject = {text: text, isAdded: true};
         $(document).trigger('TinyMCEBeforeWikiToHtml', [textObject]);
         text = textObject.text;
-        // substitute {{!}} with | if text is part of template
-        if ( _pipeText == '{{!}}' ) {
-            text = text.replace(/{{!}}/gmi, "|");
+        // substitute {{#}} with | if text is part of template
+        if ( _pipeText === '{{#}}' ) {
+            text = text.replace(/{{#}}/gmi, "|");
         }
 
         // normalize line endings to \n
@@ -814,10 +836,14 @@ var Ws_Link = function(editor) {
                         // now build the html equivalent from each parsed wikicode fragment
                         element = $(html);
                         element.addClass("mwt-ws-non-editable mwt-ws-link-" + tagClass);
+
+                        // make sure first char is uppercase
+                        const normalTagClass = tagClass[0].toUpperCase() + tagClass.slice(1);
+
                         element.attr({
                             'title': elementTitle,
                             'id': tag,
-                            'data-mwt-type': tagClass,
+                            'data-mwt-type': normalTagClass,
                             'data-mwt-wikitext': elementTitle,
                             'data-mwt-edittemplate': editTemplate,
                             'data-mwt-editparams': editParams,
@@ -1055,7 +1081,6 @@ var Ws_Link = function(editor) {
 
     function _onAfterWiki2Html(e, data) {
         var $dom = $( "<div id='tinywrapper'>" + data.text + "</div>", "text/xml" );
-
         $.each(_idsArray, function (i, id) {
             var html = _tags4Html[id];
             var replace = _tags4Replace[id];
