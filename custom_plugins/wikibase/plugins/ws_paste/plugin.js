@@ -60,7 +60,7 @@ var Ws_Paste = function (editor) {
     }
 
     function convertBack2Wiki(txt) {
-        return txt.replaceAll("{{#}}", "|");
+        return txt.replaceAll("_!_", "|");
     }
 
     this.init = function (ed, url) {
