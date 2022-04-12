@@ -103,8 +103,6 @@ var Ws_Link = function(editor) {
         editor.focus();
         editor.undoManager.transact( function () {
             editor.setContent( content, args );
-//DC not sure we need next line?
-//			editor.undoManager.add();
         });
         editor.selection.setCursorLocation();
         editor.nodeChanged();
@@ -114,35 +112,17 @@ var Ws_Link = function(editor) {
         editor.focus();
         editor.undoManager.transact( function () {
             editor.selection.setContent( content, args );
-//DC not sure we need next line?
-//			editor.undoManager.add();
         });
         editor.selection.setCursorLocation();
         editor.nodeChanged();
     };
 
     var getContent = function ( editor, args ) {
-//		return editor.getContent({ source_view: true });
-//		return editor.getContent(args);
-        /*		if ( editor.selection.isCollapsed() ) {
-                    // if nothing is selected then select everything*/
         return editor.getContent( args );
-        /*		} else if (editor.selection) {
-                    // else get the content selected
-                    return editor.selection.getContent( args );
-                }*/
     };
 
     var getSelection = function ( editor, args ) {
-//		return editor.getContent({ source_view: true });
-//		return editor.getContent(args);
-        /*		if ( editor.selection.isCollapsed() ) {
-                    // if nothing is selected then select everything
-                    return editor.getContent( args );
-                } else if (editor.selection) {
-                    // else get the content selected*/
         return editor.selection.getContent( args );
-//		}
     };
 
     var Content = {
@@ -195,10 +175,6 @@ var Ws_Link = function(editor) {
             var content = getPreviewContent(data);
             $(content).find('script[src*="WSForm.general.js"]').remove();
             var bodyItems = [
-                /*{
-                    type: 'htmlpanel', // component type
-                    html: data
-                },*/
                 {
                     label: iframeName,
                     type: 'iframe',
@@ -288,9 +264,6 @@ var Ws_Link = function(editor) {
         }
     });
 
-    // editor.on('beforeSetContent', _onBeforeSetContent);
-    /*editor.on('pastePreProcess', _onPastePreProcess);
-    editor.on('dblclick', _onDblclick);*/
 
     /**
      * convert to wiki link
@@ -552,9 +525,6 @@ var Ws_Link = function(editor) {
 
 
             tagOuterHTML = element.prop("outerHTML");
-            /*		} else if (protection != 'nonEditable') {
-                        // the wiki text contains editable html
-                        tagOuterHTML = tagHTML.replace(/( class=)/i," id=" + id + "$1");*/
         } else {
             // the tagWikiText needs to be parsed so we 'batch' them for
             // to process later.  In this case tagHTML = 'toParse
@@ -715,10 +685,7 @@ var Ws_Link = function(editor) {
     function _onBeforeSetContent(e) {
         // if raw format is requested, this is usually for internal issues like
         // undo/redo. So no additional processing should occur. Default is 'html'
-        // debugger;
-        /*if (e.format == 'raw' ) {
-            return;
-        }*/
+
         // if this is the initial load of the editor
         // tell it to convert wiki text to html
         if (e.initial === true && e.format !== 'raw') {
@@ -729,10 +696,6 @@ var Ws_Link = function(editor) {
         // if the content is wikitext thyen convert to html
         if (e.handleWsLink) {
             e.content = _convertWiki2Html(e.content);
-        } else {
-//		e.preventDefault();
-//		e.stopPropagation();
-//		e.stopImmediatePropagation();
         }
         return;
     }
@@ -997,9 +960,6 @@ var Ws_Link = function(editor) {
             selectedNode = selectedNode.parentNode;
         }
 
-        // if no node found with a wiki class then edit the original node as wiki code
-//		if (!targetFound) ed.execCommand('mceWikimagic');
-
         return;
     }
 
@@ -1060,7 +1020,6 @@ var Ws_Link = function(editor) {
 
         _wsTags4Wiki[id] = templateCall;
         _wsTags4Html[id] = 'toParse';
-        // _wsTags4Html[id] = _recoverTags2html(id);
         return id;
     }
 
@@ -1105,7 +1064,6 @@ var Ws_Link = function(editor) {
             editor.getParam("wiki_non_rendering_newline_character") +
             '</span>' : null;
         ed.on('beforeSetContent', _onBeforeSetContent);
-        // ed.on('getContent', _onGetContent);
         ed.on('dblclick', _onDblclick);
 
         ed.addCommand('mceWsLink', showWsLinkDialog);
