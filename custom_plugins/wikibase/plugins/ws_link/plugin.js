@@ -13,12 +13,12 @@ var
      * all the html tags
      * @type {any[]}
      */
-    _tags4Html = {},
+    _wsTags4Html = {},
     /**
      * all the wiki tags
      * @type {any[]}
      */
-    _tags4Wiki = {};
+    _wsTags4Wiki = {};
 
 var Ws_Link = function(editor) {
     "use strict";
@@ -31,12 +31,12 @@ var Ws_Link = function(editor) {
         /**
          *
          * global used to store the form of pipe used in the original wikicode
-         * Set to '{{!}}' or '|' depending on whether the target text is in
+         * Set to '_!_' or '|' depending on whether the target text is in
          * a template or not
          * default '|'
          * @type String
          */
-        _pipeText = ($(editor.targetElm).hasClass('mcePartOfTemplate')) ? '{{!}}' : '|',
+        _pipeText = ($(editor.targetElm).hasClass('mcePartOfTemplate')) ? '_!_' : '|',
         /**
          *
          * string for inserting a placeholder in editor text for
@@ -103,8 +103,6 @@ var Ws_Link = function(editor) {
         editor.focus();
         editor.undoManager.transact( function () {
             editor.setContent( content, args );
-//DC not sure we need next line?
-//			editor.undoManager.add();
         });
         editor.selection.setCursorLocation();
         editor.nodeChanged();
@@ -114,35 +112,17 @@ var Ws_Link = function(editor) {
         editor.focus();
         editor.undoManager.transact( function () {
             editor.selection.setContent( content, args );
-//DC not sure we need next line?
-//			editor.undoManager.add();
         });
         editor.selection.setCursorLocation();
         editor.nodeChanged();
     };
 
     var getContent = function ( editor, args ) {
-//		return editor.getContent({ source_view: true });
-//		return editor.getContent(args);
-        /*		if ( editor.selection.isCollapsed() ) {
-                    // if nothing is selected then select everything*/
         return editor.getContent( args );
-        /*		} else if (editor.selection) {
-                    // else get the content selected
-                    return editor.selection.getContent( args );
-                }*/
     };
 
     var getSelection = function ( editor, args ) {
-//		return editor.getContent({ source_view: true });
-//		return editor.getContent(args);
-        /*		if ( editor.selection.isCollapsed() ) {
-                    // if nothing is selected then select everything
-                    return editor.getContent( args );
-                } else if (editor.selection) {
-                    // else get the content selected*/
         return editor.selection.getContent( args );
-//		}
     };
 
     var Content = {
@@ -164,6 +144,24 @@ var Ws_Link = function(editor) {
         // if the editParams are filled is an edit action
         if ( editParams) {
             templateCall = `{{${name}|${editParams}}}`;
+        } else if (editor.selection) {
+            const $sel = $('<div></div>').html(editor.selection.getContent(editor, {}));
+            let selectionText = '';
+            $sel[0].childNodes.forEach((node, index) => {
+                let t = '';
+
+                // check if node is text
+                if ( node.nodeType === 3 )  {
+                    t = node.nodeValue;
+                    if ( t === '\n' ) t = ' ';
+                } else {
+                    t = node.innerText;
+                }
+
+                selectionText += t;
+            });
+
+            templateCall = `{{${name}|TinymceSelectedText=${selectionText}}}`;
         }
 
         var editTemplate = name.slice(name.indexOf(':') + 1);
@@ -177,10 +175,6 @@ var Ws_Link = function(editor) {
             var content = getPreviewContent(data);
             $(content).find('script[src*="WSForm.general.js"]').remove();
             var bodyItems = [
-                /*{
-                    type: 'htmlpanel', // component type
-                    html: data
-                },*/
                 {
                     label: iframeName,
                     type: 'iframe',
@@ -270,9 +264,6 @@ var Ws_Link = function(editor) {
         }
     });
 
-    // editor.on('beforeSetContent', _onBeforeSetContent);
-    /*editor.on('pastePreProcess', _onPastePreProcess);
-    editor.on('dblclick', _onDblclick);*/
 
     /**
      * convert to wiki link
@@ -519,10 +510,14 @@ var Ws_Link = function(editor) {
             // create DOM element from tagHTML
             element = $(tagHTML);
             element.addClass("mwt-ws-non-editable mwt-" + tagClass);
+
+            // make sure first char is uppercase
+            const normalTagClass = tagClass[0].toUpperCase() + tagClass.slice(1);
+
             element.attr({
                 'id': id,
                 'title': titleWikiText ,
-                'data-mwt-type': tagClass,
+                'data-mwt-type': normalTagClass,
                 'data-mwt-wikitext': titleWikiText,
                 'draggable': "true",
                 'contenteditable': "false"
@@ -530,9 +525,6 @@ var Ws_Link = function(editor) {
 
 
             tagOuterHTML = element.prop("outerHTML");
-            /*		} else if (protection != 'nonEditable') {
-                        // the wiki text contains editable html
-                        tagOuterHTML = tagHTML.replace(/( class=)/i," id=" + id + "$1");*/
         } else {
             // the tagWikiText needs to be parsed so we 'batch' them for
             // to process later.  In this case tagHTML = 'toParse
@@ -541,8 +533,8 @@ var Ws_Link = function(editor) {
 
         // preserve the wiki text and html in arrays for later substitution
         // for the relevant placeholder
-        _tags4Wiki[id] = tagWikiText;
-        _tags4Html[id] = tagOuterHTML;
+        _wsTags4Wiki[id] = tagWikiText;
+        _wsTags4Html[id] = tagOuterHTML;
         return id;
     }
 
@@ -565,7 +557,7 @@ var Ws_Link = function(editor) {
         while (tagWikiText.match(/(\<###.*?:\d*###>)/gmi)) {
             tagWikiText = tagWikiText.replace(/(\<###.*?:\d*###>)/gmi, function(match, $1) {
 
-                return _tags4Wiki[$1];
+                return _wsTags4Wiki[$1];
             });
         }
         return tagWikiText
@@ -591,7 +583,7 @@ var Ws_Link = function(editor) {
             tagHTML = tagHTML.replace(/(\<###.*?:\d*###>)/gmi, function(match, $1) {
                 // replace '&amp;amp;' with '&amp;' as we double escaped these when
                 // they were converted
-                return _tags4Wiki[$1].replace(/&amp;amp;/gmi,'&amp;');
+                return _wsTags4Wiki[$1].replace(/&amp;amp;/gmi,'&amp;');
             });
         }
         return tagHTML
@@ -663,9 +655,9 @@ var Ws_Link = function(editor) {
         textObject = {text: text, isAdded: true};
         $(document).trigger('TinyMCEBeforeWikiToHtml', [textObject]);
         text = textObject.text;
-        // substitute {{!}} with | if text is part of template
-        if ( _pipeText == '{{!}}' ) {
-            text = text.replace(/{{!}}/gmi, "|");
+        // substitute _!_ with | if text is part of template
+        if ( _pipeText === '_!_' ) {
+            text = text.replace(/_!_/gmi, "|");
         }
 
         // normalize line endings to \n
@@ -693,10 +685,7 @@ var Ws_Link = function(editor) {
     function _onBeforeSetContent(e) {
         // if raw format is requested, this is usually for internal issues like
         // undo/redo. So no additional processing should occur. Default is 'html'
-        // debugger;
-        /*if (e.format == 'raw' ) {
-            return;
-        }*/
+
         // if this is the initial load of the editor
         // tell it to convert wiki text to html
         if (e.initial === true && e.format !== 'raw') {
@@ -707,10 +696,6 @@ var Ws_Link = function(editor) {
         // if the content is wikitext thyen convert to html
         if (e.handleWsLink) {
             e.content = _convertWiki2Html(e.content);
-        } else {
-//		e.preventDefault();
-//		e.stopPropagation();
-//		e.stopImmediatePropagation();
         }
         return;
     }
@@ -739,16 +724,16 @@ var Ws_Link = function(editor) {
         // we use the parser table to collect all the wikicode to be parsed into a single
         // document to avoid multiple calls to the api parser so speed things up
         // there are two passes one to collect the parser text and the next to insert it
-        if (_tags4Html) {
+        if (_wsTags4Html) {
             text = text.replace(/\<###.*?:\d*###>/gmi, function(match) {
                 // if the placeholder is in the array replace it otherwise
                 // return the placeholder escaped
-                if ((_tags4Html[match] === 'toParse') && (_tags4Wiki[match])) {
-                    parserTable.push(_tags4Wiki[match]);
+                if ((_wsTags4Html[match] === 'toParse') && (_wsTags4Wiki[match])) {
+                    parserTable.push(_wsTags4Wiki[match]);
                     parserTags.push(match);
                     return match
-                } else if (_tags4Html[match]) {
-                    return _tags4Html[match];
+                } else if (_wsTags4Html[match]) {
+                    return _wsTags4Html[match];
                 } else {
                     return match.replace(/^</, '&lt;');
                 }
@@ -788,7 +773,7 @@ var Ws_Link = function(editor) {
                             editParams;
 
                         html = parserTable[count];
-                        elementTitle = _tags4Wiki[tag];
+                        elementTitle = _wsTags4Wiki[tag];
                         editParams = elementTitle.slice(elementTitle.indexOf('|') + 1, elementTitle.indexOf('}}'));
                         if ( html.match(blockMatcher) ) {
                             // if parser result contains a block tag. wrap in a <div>
@@ -800,7 +785,7 @@ var Ws_Link = function(editor) {
                                 html = html + _img ;
                             }
                             html = '<div>' + html + '</div>';
-                            _tags4Wiki[tag] = '<##bnl##>' + _tags4Wiki[tag] + '<##bnl##>';
+                            _wsTags4Wiki[tag] = '<##bnl##>' + _wsTags4Wiki[tag] + '<##bnl##>';
                         } else {
                             // otherwise wrap in a <span>
                             if (html) {
@@ -814,10 +799,14 @@ var Ws_Link = function(editor) {
                         // now build the html equivalent from each parsed wikicode fragment
                         element = $(html);
                         element.addClass("mwt-ws-non-editable mwt-ws-link-" + tagClass);
+
+                        // make sure first char is uppercase
+                        const normalTagClass = tagClass[0].toUpperCase() + tagClass.slice(1);
+
                         element.attr({
                             'title': elementTitle,
                             'id': tag,
-                            'data-mwt-type': tagClass,
+                            'data-mwt-type': normalTagClass,
                             'data-mwt-wikitext': elementTitle,
                             'data-mwt-edittemplate': editTemplate,
                             'data-mwt-editparams': editParams,
@@ -826,7 +815,7 @@ var Ws_Link = function(editor) {
                         });
 
                         // preserve the html for later recovery
-                        _tags4Html[tag] = element.prop("outerHTML");
+                        _wsTags4Html[tag] = element.prop("outerHTML");
                         return element.prop("outerHTML");
                     });
                 }
@@ -971,9 +960,6 @@ var Ws_Link = function(editor) {
             selectedNode = selectedNode.parentNode;
         }
 
-        // if no node found with a wiki class then edit the original node as wiki code
-//		if (!targetFound) ed.execCommand('mceWikimagic');
-
         return;
     }
 
@@ -981,7 +967,7 @@ var Ws_Link = function(editor) {
         if ( data.isAdded ) {
             var $dom = $( "<div id='tinywrapper'>" + data.text + "</div>", "text/xml" );
             $dom.find("*[class*='mwt-ws-link']").replaceWith(function (i, el) {
-                return _tags4Wiki[this.id];
+                return _wsTags4Wiki[this.id];
             });
             data.text = $dom.html();
         } else {
@@ -1032,19 +1018,17 @@ var Ws_Link = function(editor) {
     function _replaceTextIntoHtmlElement(templateCall, tagClass, editTemplate) {
         var id = `<###${tagClass.toUpperCase()}__--__${editTemplate}:${_createUniqueNumber()}###>`;
 
-        _tags4Wiki[id] = templateCall;
-        _tags4Html[id] = 'toParse';
-        // _tags4Html[id] = _recoverTags2html(id);
+        _wsTags4Wiki[id] = templateCall;
+        _wsTags4Html[id] = 'toParse';
         return id;
     }
-
 
     function _onBeforeHtml2Wiki(e, data) {
         var $dom = $( "<div id='tinywrapper'>" + data.text + "</div>", "text/xml" );
         $dom.find("*[class*='mwt-ws-link']").replaceWith(function (i, el) {
-            var _tag = _tags4Wiki[this.id];
+            var _tag = _wsTags4Wiki[this.id];
             if ( _tag ) {
-                _tag = _tag.replace(/\|/gi, '{{#}}');
+                _tag = _tag.replace(/\|/gi, '_!_');
                 return _tag;
             }
             return el;
@@ -1053,11 +1037,11 @@ var Ws_Link = function(editor) {
         return data;
     }
 
+
     function _onAfterWiki2Html(e, data) {
         var $dom = $( "<div id='tinywrapper'>" + data.text + "</div>", "text/xml" );
-
         $.each(_idsArray, function (i, id) {
-            var html = _tags4Html[id];
+            var html = _wsTags4Html[id];
             var replace = _tags4Replace[id];
             data.text = data.text.replace(replace, html);
         });
@@ -1066,8 +1050,8 @@ var Ws_Link = function(editor) {
 
     function _onAfterHtml2Wiki(e, data) {
         var $dom = $( "<div id='tinywrapper'>" + data.text + "</div>", "text/xml" );
-        if ( data.text.indexOf('{{#}}') > -1 ) {
-            data.text = data.text.replace(/{{#}}/gi, '|');
+        if ( data.text.indexOf('_!_') > -1 ) {
+            data.text = data.text.replace(/_!_/gi, '|');
         }
         return data;
     }
@@ -1080,7 +1064,6 @@ var Ws_Link = function(editor) {
             editor.getParam("wiki_non_rendering_newline_character") +
             '</span>' : null;
         ed.on('beforeSetContent', _onBeforeSetContent);
-        // ed.on('getContent', _onGetContent);
         ed.on('dblclick', _onDblclick);
 
         ed.addCommand('mceWsLink', showWsLinkDialog);

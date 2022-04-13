@@ -12,15 +12,6 @@ var WsRvsNotitie = function(editor) {
             });
         } else { // needs to be added or changed
             if (rvsNode && type !== 'interne tekst') { // needs to be changed
-                // check if current focused element is not a note, or the type is anything but interne tekst
-                /*if (!$(rvsNode).hasClass('rvs-note') || type !== 'interne tekst') {
-                    editor.notificationManager.open({
-                        text: 'Je kan geen notitie in een notitie toevoegen!',
-                        type: 'error',
-                        timeout: 3000
-                    });
-                    return;
-                }*/
 
 
                 const getTemplate = function (text) {
@@ -134,10 +125,7 @@ var WsRvsNotitie = function(editor) {
         editor.focus();
         editor.undoManager.transact( function () {
             editor.selection.setContent( content, args );
-//DC not sure we need next line?
-            editor.undoManager.add();
         });
-        // editor.selection.setCursorLocation();
         editor.nodeChanged();
     };
 

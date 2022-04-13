@@ -32,21 +32,18 @@ var Ws_Paste = function (editor) {
         $html = _removeUnWantedClasses($html);
         $html = _removeUnWantedMarkJSSpans($html);
         html = $($html).html();
+
         var textObject = {text: html};
         $(document).trigger('TinyMCEBeforeWikiToHtml', [textObject]);
         html = textObject.text;
-        // console.log(html);
-        // $(document).trigger('TinyMCEAfterWikiToHtml', [textObject]);
-        // html = textObject.text;
+        
         data.text = html;
         return data;
     }
 
     function _pasteAfterProcess(e, data) {
-        // console.log(data.text);
         var textObject = {text: data.text};
         $(document).trigger('TinyMCEAfterWikiToHtml', [textObject]);
-        // console.log(textObject.text);
         data.text = textObject.text;
         return data;
     }
@@ -60,7 +57,7 @@ var Ws_Paste = function (editor) {
     }
 
     function convertBack2Wiki(txt) {
-        return txt.replaceAll("{{!}}", "|");
+        return txt.replaceAll("_!_", "|");
     }
 
     this.init = function (ed, url) {

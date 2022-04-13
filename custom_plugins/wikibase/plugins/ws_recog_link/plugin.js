@@ -873,7 +873,6 @@
 
         var pattern = {
             regex: new RegExp(allowedLinksFormats.join('|'),'gi'),
-            // regex: /([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\b)|([0-9]{9}\/[0-9](\/[a-z][0-9])+\b)|([0-9]{9}\/[0-9]\b)|([0-9]+HLAR[0-9]{3,}\b)|(G[0-9]{8}\b)|(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{4,8})/gi,
             matchIndex: 1
         };
         var count = markAllMatches(editor, currentSearchState, pattern, inSelection);
@@ -923,7 +922,6 @@
                     $(document).trigger('TinyMCEAfterWikiToHtml', [textObject]);
                     text = textObject.text;
                     $(nodes[i].firstChild).replaceWith(text);
-                    // nodes[i].firstChild.nodeValue = text;
                     unwrap(nodes[i]);
                 } else {
                     removeNode(editor.dom, nodes[i]);
@@ -1125,13 +1123,6 @@
                     {
                         type: 'bar',
                         items: [
-                            // {
-                            //     type: 'input',
-                            //     name: 'findtext',
-                            //     placeholder: 'Find',
-                            //     maximized: true,
-                            //     inputMode: 'hidden'
-                            // },
                             {
                                 type: 'button',
                                 name: 'prev',
@@ -1150,39 +1141,9 @@
                             }
                         ]
                     },
-                    // {
-                    //     type: 'input',
-                    //     name: 'replacetext',
-                    //     placeholder: 'Replace with',
-                    //     inputMode: 'hidden'
-                    // }
                 ]
             },
             buttons: [
-                // {
-                //     type: 'menu',
-                //     name: 'options',
-                //     icon: 'preferences',
-                //     tooltip: 'Preferences',
-                //     align: 'start',
-                //     items: [
-                //         {
-                //             type: 'togglemenuitem',
-                //             name: 'matchcase',
-                //             text: 'Match case'
-                //         },
-                //         {
-                //             type: 'togglemenuitem',
-                //             name: 'wholewords',
-                //             text: 'Find whole words only'
-                //         },
-                //         {
-                //             type: 'togglemenuitem',
-                //             name: 'inselection',
-                //             text: 'Find in selection'
-                //         }
-                //     ]
-                // },
                 {
                     type: 'custom',
                     name: 'find',
@@ -1266,7 +1227,6 @@
         editor.ui.registry.addButton('wsrecoglink', {
             text: 'Links herkennen',
             onAction: function () {
-                // showDialog(editor, currentSearchState);
                 open(editor, currentSearchState);
             }
         });
