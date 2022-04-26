@@ -192,7 +192,7 @@ var Ws_Link = function(editor) {
 
             // make sure that the select2 library is implemented, and rendered
             // attachTokens();
-            $(`iframe[title="${iframeName}"]`).load(function () {
+            $(`iframe[title="${iframeName}"]`).load(async function () {
                 var iframe = $(`iframe[title="${iframeName}"]`);
                 $(iframe).css({
                     'min-height': '400px',
@@ -201,12 +201,13 @@ var Ws_Link = function(editor) {
                     'overflow': 'hidden'
                 });
                 setUpTokenFunction(iframe);
+                var body = $(iframe).contents().find('body');
                 if ( typeof WsShowOnSelect !== 'function') {
-                    $.getScript('/wikis/modules/wsbasics/WSShowOnSelect.js').done(function () {
-                        setUpIFrameWssos(iframe);
+                    $.getScript('/extensions/FlexForm/Modules/showOnSelect/WSShowOnSelect.js').done(async function () {
+                        await WsShowOnSelect(body);
                     })
                 } else {
-                    setUpIFrameWssos(iframe);
+                    await WsShowOnSelect(body);
                 }
             })
         }).fail(function (err) {
