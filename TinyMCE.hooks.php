@@ -210,7 +210,7 @@ class TinyMCEHooks {
 		}
 		$vars['wgTinyMCEUserMayUploadFromURL'] = $userMayUploadFromURL;
 
-		if ($user->isBlocked()) {
+		if ( $user->getBlock() ) {
 			$userIsBlocked = true;
 		} else {
 			$userIsBlocked = false;
@@ -432,7 +432,7 @@ class TinyMCEHooks {
 			$wikiPage = new WikiPage( $title );
 			$content = $wikiPage->getContent();
 			if ( $content != null ) {
-				$pageText = $content->getNativeData();
+				$pageText = $content->getText();
 				foreach ( $wgTinyMCEUnhandledStrings as $str ) {
 					if ( strpos( $pageText, $str ) !== false ) {
 						return $wgTinyMCEUse = false;
@@ -444,7 +444,7 @@ class TinyMCEHooks {
 		// If there's a 'notinymce' property for this page in the
 		// page_props table, regardless of the value, disable TinyMCE.
 		$dbr = wfGetDB( DB_REPLICA );
-		$res = $dbr->select( 'page_props',
+		$row = $dbr->selectRow( 'page_props',
 			array(
 				'pp_value'
 			),
@@ -454,9 +454,7 @@ class TinyMCEHooks {
 			)
 		);
 
-		// First row of the result set.
-		$row = $dbr->fetchRow( $res );
-		if ( $row != null ) {
+		if ( $row ) {
 			return $wgTinyMCEUse = false;
 		}
 

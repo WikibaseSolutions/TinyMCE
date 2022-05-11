@@ -19,7 +19,7 @@
 		tinyMCETagList = mw.config.get( 'wgTinyMCETagList' ),
 		tinyMCELanguage = mw.config.get( 'wgTinyMCELanguage' ),
 		tinyMCEDirectionality = mw.config.get( 'wgTinyMCEDirectionality' ),
-		tinyMCESettings = mw.config.get( 'wgTinyMCESettings' ) ? mw.config.get( 'wgTinyMCESettings' ) : { "#wpTextbox1": [] },
+		tinyMCESettings = mw.config.get( 'wgTinyMCESettings' ) ? mw.config.get( 'wgTinyMCESettings' ) : { ".tinymce, #wpTextbox1": [] },
 		tinyMCEVersion = mw.config.get( 'wgTinyMCEVersion' ),
 		tinyMCELangURL = null,
 		mw_skin = mw.config.get( 'skin' ),
@@ -77,7 +77,7 @@
 			'br', 'hr', 'link', 'meta', 'wbr', // these are html tags too
 		],
 		mw_extensionSingleOnly = [
-			'references', 
+			'references', 'ref',
 		],
 		mw_htmlNestable = [
 			'bdo', 'big', 
@@ -118,7 +118,7 @@
 		mw_parserShortElements = tinyMCETagList.split("|").join(" ") + ' area base basefont br col frame hr img input isindex link meta param embed source wbr track' ;
 
 	//set up other mw related constants
-	
+
 	// set up language url if language not 'en'
 	if ( tinyMCELanguage !== 'en' ) {
 		tinyMCELanguage = tinyMCELanguage.replace(/^([^-]*)(-)([^-]*)$/i, function( match, $1, $2, $3 ) {
@@ -423,7 +423,7 @@
 				'autosave': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/autosave/plugin.js',
 				'charmap': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/charmap/plugin.js',
 				'insertdatetime': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/insertdatetime/plugin.js',
-//				'lists': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/lists/plugin.js',
+				'lists': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/lists/plugin.js',
 				'noneditable': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/noneditable/plugin.js',
 				'preview': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/preview/plugin.js',
 				'save': mw_extensionAssetsPath + '/TinyMCE/tinymce/plugins/save/plugin.js',
@@ -477,6 +477,9 @@
 			wiki_template_classes: [
 				'mcePartOfTemplate',
 			],
+			mediawikiTemplateClasses: [
+				'mcePartOfTemplate',			
+			],
 			// ws tools flag to deco9de html enities on input
 			decodeHtmlEntitiesOnInput: false,
 			//
@@ -500,6 +503,7 @@
 			},
 			browser_spellcheck: true,
 			visual: false,
+			nonbreaking_force_tab: true,
 			nonbreaking_wrap: false,
 			wikimagic_context_toolbar: true,
 			browsercontextmenu_context_toolbar: true,
@@ -559,7 +563,7 @@
 			// apply in a correct manner. This may be dangerous.
 			body_id: 'bodyContent',
 			// Allowable file types for file picker
-			file_picker_types: 'file image media',
+//			file_picker_types: 'file image media',
 			// Enable/disable options in upload popup
 			image_description: true,
 			image_title: true,
@@ -603,17 +607,32 @@
 				{title: "Paragraph", block: "p"}
 			],
 			formats: {
-				// Changes the default format for h1 to have a class of mwt-heading
-				h1: { block: 'h1', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
-				h2: { block: 'h2', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
-				h3: { block: 'h3', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
-				h4: { block: 'h4', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
-				h5: { block: 'h5', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
-				h6: { block: 'h6', classes: 'mwt-heading', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' } },
-				pre: { block: 'pre', classes: 'mwt-pre' ,attributes: { 'data-mwt-type': 'pre' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
-				pre2: { block: 'pre', classes: 'mwt-ppre' ,attributes: { 'data-mwt-type': 'ppre' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
-				code: { inline: 'code', classes: 'mwt-code' ,attributes: { 'data-mwt-type': 'code' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
-				nowiki: { inline: 'span', classes: 'mwt-nowiki' ,attributes: { 'data-mwt-type': 'nowiki' /*, 'data-mwt-headingSpacesAfter': ' '*/ } }
+				// Changes the default formats to have Tinymce mediawiki attributes
+				/* 'a|b|code|img|h1|h2|h3|h4|h5|h6|i|p|svg|br|hr|link|meta|wbr|bdo|big|blockquote|code|dd|div|dl|dt|em|font|kbd|li|ol|q|ruby|samp|small|span|strong|sub|sup|table|td|th|tr|ul|var|tbody|abbr
+				|b|bdi|bdo|caption|center|reference|data|del|dfn|ins|kbd|mark|p|q|rb|rp|rt|rtc|ruby|s|strike|time|tt|u|link|meta|var|wbr|gallery|indicator|html|categorytree|ref|references|imagemap|inputbox
+				|poem|source|syntaxhighlight|templatedata|headertabs|editinline|includeonly|onlyinclude|noinclude|nowiki'
+				*/
+				h1: { block: 'h1', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-heading' } } ,
+				h2: { block: 'h2', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-heading' } } ,
+				h3: { block: 'h3', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-heading' } } ,
+				h4: { block: 'h4', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-heading' } } ,
+				h5: { block: 'h5', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-heading' } } ,
+				h6: { block: 'h6', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-heading' } } ,
+				li: { block: 'li', attributes: { 'data-mwt-headingSpacesBefore': ' ' , 'data-mwt-headingSpacesAfter': ' ' , 'class': 'mwt-list' } } ,
+				p: { block: 'p', attributes: { 'class': 'mwt-paragraph' } },
+				pre: { block: 'pre', attributes: { 'data-mwt-type': 'pre' , 'class': 'mwt-heading' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+				pre2: { block: 'pre', attributes: { 'data-mwt-type': 'ppre' , 'class': 'mwt-ppre' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+				code: { inline: 'code', attributes: { 'data-mwt-type': 'code' , 'class': 'mwt-code' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+				nowiki: { inline: 'span', attributes: { 'data-mwt-type': 'nowiki' , 'class': 'mwt-nowiki' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+				pnowiki: { inline: 'span', attributes: { 'data-mwt-type': 'pnowiki' , 'class': 'mwt-pnowiki' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+				source: { inline: 'span', attributes: { 'data-mwt-type': 'nowiki' , 'class': 'mwt-source' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+				comment: { inline: 'span', attributes: { 'data-mwt-type': 'comment' , 'class': 'mwt-comment' /*, 'data-mwt-headingSpacesAfter': ' '*/ } },
+//				removePreserveHtmlTag: { selector: '*.mwt-preserveHtml', attributes: { 'class': '' } },
+				removePreserveHtmlTag: { selector: mw_preservedTagsList.split("|").join(".mwt-preserveHtml,") + ".mwt-preserveHtml", attributes: { 'class': '' } },
+				removeformat: [
+					// Configures `clear formatting` to remove mw_preserveHTML class, if assigned to element
+					{ selector: mw_preservedTagsList.split("|").join(","), classes: 'mwt-preserveHtml', remove: 'empty' },
+				  ]
 			},
 			block_formats: 'Paragraph=p;Heading 1=h1;Heading 2=h2;Heading 3=h3;Heading 4=h4;Heading 5=h5;Heading 6=h6;Pre(without markup)=pre;Pre(with markup)=pre2;Code=code;Nowiki=nowiki',
 			images_upload_credentials: true,
@@ -634,7 +653,7 @@
 						}
 					}
 				});
-	  		editor.on('ScriptsLoaded', function(e) {
+	  		editor.on('SkinLoaded', function(e) {
 	  			var _toolbarResizeFactor = tinymce.activeEditor.getParam("toolbarResize");
 			
 				  /**
@@ -647,75 +666,54 @@
 				   * @published 2016
 				   */
 					
-	  			var returnStyleSheetRules = (function (){  
-					  if(!document.styleSheets[0]){
-						  // Create the <style> tag
-						  var style = document.createElement("style");
-						  // WebKit hack :(
-						  style.appendChild(document.createTextNode(""));
-						  // Add the <style> element to the page
-						  document.head.appendChild(style);
-						
-					  }
-					  if(document.styleSheets[0].cssRules){
-						  return function (item) {return  item.cssRules;}
-					  } else if (document.styleSheets[0].rules) {
-						  return function (item) {return  item.rules;}
-					  }
-				  })();
+	  			function getStyleSheetRules( styleSheet ) {  
+						if ( styleSheet.cssRules && styleSheet.cssRules.length > 0 ) {
+							return styleSheet.cssRules;
+						} else if ( styleSheet.rules && styleSheet.ruleslength > 0 ) {
+							return styleSheet.rules;
+						} else {
+							return [];
+						}
+					}
 					
-				  function getCSSRule(search, returnArray) {  
-					  let styleSheets = [].map.call(document.styleSheets, function(item) {
-						  return [].slice.call(returnStyleSheetRules(item));
-					  });
-			
-					  let rule = null;
-					  let rules = [];
-					  styleSheets.forEach(function(thisSheet){
-						  let findTheRule = thisSheet.filter(function(rule) {
-							  if(rule.selectorText){
-								  if(rule.selectorText == search){
-									  return rule.selectorText.indexOf(search)>=0;	
-								  }else return false;
-							  }
-						  });
-						
-						  if(findTheRule.length){
-								rules = rules.concat(findTheRule);
-								rule = findTheRule[findTheRule.length-1];    //findTheRule will contain all rules that reference the selector. findTheRule[findTheRule.length-1] contains the last rule.
-						  }
-					  });
-	  
-					  if (rule){
-						  if(returnArray){
-							  return rules;
-						  }else{
-							  return rule;
-						  }
-					  }else{
-						  let sheet = document.styleSheets[0];   //if the rule we are looking for doesn't exist, we create it
-						  var pos = sheet.cssRules.length;
-						  rule = search + "{  }";
-						  sheet.insertRule( rule ,pos );
-						  rule = sheet.cssRules[pos];
-					  }
-		  
-					  if(returnArray){
-						  returnStyleSheetRules(document.styleSheets[0]);
-						  return rules = rules.concat(rule);
-					  }else{
-						  returnStyleSheetRules(document.styleSheets[0])[pos];
-						  return rule;
-					  }
-				  }
-	  
-				  var myRules  = getCSSRule('.tox-tbtn', true);
+				function getCSSRules( selector, returnArray) {  
+					var styleSheetRules = [];
 
-				  myRules.forEach(function(thisRule){
-					  thisRule.style.transform = "scale(" + _toolbarResizeFactor + ")";
-					  thisRule.style.setProperty ("height", 34 * _toolbarResizeFactor + "px", "important");
-					  thisRule.style.setProperty ("width", "auto", "important");
-				  });
+					let styleSheets = Array.from( document.styleSheets ).filter(
+							( styleSheet ) => {
+								return !styleSheet.href || styleSheet.href.startsWith(window.location.origin);
+							}
+						)
+
+					if( !styleSheets[0] ){
+						// Create the <style> tag
+						var style = document.createElement( "style" );
+						// WebKit hack :(
+						style.appendChild( document.createTextNode( "" ));
+						// Add the <style> element to the page
+						document.head.appendChild( style );
+					}
+
+					let targetStyleSheetsRules = [];
+
+					styleSheets.forEach( function( styleSheet ) {
+						styleSheetRules = getStyleSheetRules( styleSheet );
+						for ( var x = 0; x < styleSheetRules.length; x++ ) {        
+							if ( styleSheetRules[x].selectorText == selector ) {
+								targetStyleSheetsRules = targetStyleSheetsRules.concat( styleSheetRules[x] );
+							}         
+						}
+					});
+					return targetStyleSheetsRules;
+				}
+	  
+				var myRules  = getCSSRules( '.tox-tbtn', true );
+
+				myRules.forEach( function( thisRule ){
+					thisRule.style.transform = "scale(" + _toolbarResizeFactor + ")";
+					thisRule.style.setProperty ( "height", 34 * _toolbarResizeFactor + "px", "important" );
+					thisRule.style.setProperty ( "width", "auto", "important" );
+				});
 			  });
 			},
 			init_instance_callback: function (instance) {
@@ -750,10 +748,28 @@
 		};
 	};
 
-	var mwTinyMCEInit = function( tinyMCESelector, settings ) {
-		var customSettings = updateSettings( tinyMCESelector, settings );
+	window.mwTinyMCEInit = function( tinyMCESelector, settings ) {
+		var customSettings = updateSettings( tinyMCESelector, settings ),
+			target = tinymce.DOM.get( tinyMCESelector.substring( 1 ) ),
+			editor = '';
 
-		window.tinymce.init( customSettings );
+		//remove the minimize on blur class as this throws PF multiple fields
+		// remove any existing editor on the element first otherwise may not
+		// work when initialising PageForms multiple fields
+		if( target && target.nextSibling && target.nextSibling.classList.contains( 'tox-tinymce' )) {
+			editor = tinymce.get( target.id );
+			if ( !editor ) {
+				target.nextSibling.remove();
+			}
+		}
+		if ( !editor ) {
+			tinymce.init( customSettings ).then( function(editors) {
+				if( target && target.nextSibling && target.nextSibling.classList.contains( 'tox-tinymce' )) {
+					tinymce.DOM.show( target.nextSibling );
+				}
+			});
+
+		}
 	};
 
 	var updateSettings = function( tinyMCESelector, settings ) {
@@ -832,8 +848,8 @@
 	};
 
 	Object.keys( tinyMCESettings ).forEach( function(selector, index) {
-			mwTinyMCEInit( selector, this[selector] );
+			window.mwTinyMCEInit( selector, this[selector] );
 		}, tinyMCESettings );
-
+		
 	// Let others know we're done here
 	$( document ).trigger( 'TinyMCELoaded' ); 
