@@ -66,7 +66,6 @@
 
 		editor.selection.setRng( fix_selection( editor.selection.getRng() ));
 
-		
 		if ( type == 'reference' ) {
 			if ( classList.includes( "mwt-reference" )) {
 				alert( translate( "tinymce-reference-alert-not-allowed" ));
@@ -75,7 +74,7 @@
 				refHtml = getSelection( editor, {format : 'html', convert2wiki : false});
 			}
 			if ( refHtml == '') refHtml = translate( "tinymce-reference-enterReferenceContent" );
-			reference = '<ref>' + '<span class="mwt-dummyReference" id="' + id + '">' + refHtml + '</span></ref>';
+			reference = '<ref>' + '<span class="mwt-dummyReference" contenteditable="true" id="' + id + '">' + refHtml + '</span></ref>';
 	  
 		} else if ( type = 'comment' ) {
 			// comments are plain text so convert the content to wikitext
@@ -85,7 +84,7 @@
 			// create inner span that contains the content of the comment
 			refHtml = 
 				'<span class="mwt-editable mwt-reference mwt-comment'  
-				+ '" id="' + id
+//				+ '" id="' + id
 				+ '" data-mwt-type="comment"'
 				+ '" draggable="false" contenteditable="true">' 
 				+ refHtml
@@ -109,10 +108,15 @@
 	var toggleRefText = function ( editor ) {
 		var selection = editor.selection.getNode(),
 			id = editor.dom.getAttrib( selection, 'data-mwt-ref' ) ?  editor.dom.getAttrib( selection, 'data-mwt-ref' ): '' ;
-			
+
 		if ( id ) {
 			selection = editor.selection.select( editor.dom.select('#' + id )[0] );
-			editor.dom.toggleClass( editor.dom.select('#' + id )[0], 'mwt-showReference' );
+/*			editor.dom.toggleClass( editor.dom.select('#' + id )[0], 'mwt-showReference' );
+			editor.selection.setCursorLocation( editor.selection.getNode());
+			editor.selection.collapse( false );
+*/
+			editor.dom.toggleClass( selection, 'mwt-showReference' );
+			editor.nodeChanged();
 			editor.selection.setCursorLocation( editor.selection.getNode());
 			editor.selection.collapse( false );
 		}

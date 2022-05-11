@@ -1024,7 +1024,7 @@
 			// and send it to be parsed, then split out the parsed code and replace it 
 			// within the text
 			if (parserTable.length > 0) {
-				// we need to wrap the seperator {@@@@} with two '\n's because
+				// we need to wrap the separator {@@@@} with two '\n's because
 				// of the way pre and pseudo pre tags are handled in the wiki parser
 
 				// add trailing separator in case last item parses as nothing
@@ -1316,35 +1316,33 @@
 				if ( $1 == 'ref' ) {
 					// $1 = content of the comment
 					var refHtml,
-						showRef = '',
 						id = 'R' + createUniqueNumber();
 
-					if ( $3.includes( "mwt-dummyReference" )) showRef = " mwt-showReference";
+					if ( !$3.includes( "mwt-dummyReference" )) {
+						$3 = '<span class="mwt-hideReference mwt-reference" contenteditable="true" id="' + id + '">'
+						+ $3 + '</span>';
+					}
+
 					refHtml = $3.replace(/\n/gm, '{@@@ENL:0@@@}');
 					refHtml = refHtml.replace(/([^}])\{@@@ENL:0@@@}\{@@@ENL:0@@@}/gmi, '$1{@@@ELF:0@@@}');
 					refHtml = _convertWiki2Html( $.trim( $3 ), "inline" );
+
+					if ( refHtml.includes( "mwt-dummyReference" )) {
+						refHtml = refHtml.replace(/mwt-dummyReference/, 'mwt-reference mwt-showReference' );
+						refHtml = refHtml.replace(/\>/, ' id="' + id + '">');
+					}
 					
 					if ( refHtml == '' ) {
 						refHtml = ' ' + translate( 'tinymce-empty-reference' );
 					}
 					
 					// create inner span that contains the content of the reference
-					refHtml = 
-						'<span class="mwt-editable mwt-reference' + showRef
-						+ '" id="' + id
-						+ '" data-mwt-type="reference"'
-						+ '" draggable="false" contenteditable="true">' 
-						+ refHtml
-						+ '</span>';
-					
-					// create outer span that contains the visible comment placeholder
-					refHtml = '<span class="mwt-placeHolder mwt-referenceHolder " title="' 
-						+ translate( 'tinymce-editreference' ) 
+					refHtml = '<span class="mwt-placeHolder mwt-referenceHolder mwt-editable'
+						+ '" title="' + translate( 'tinymce-editreference' ) 
 						+ '" data-mwt-type="reference" contenteditable="false" draggable="true" data-mwt-ref="' 
 						+ id + '"> ' 
 						+ refHtml 
 						+ ' </span>';
-					  
 					return _getPlaceHolder4Html(match, refHtml, 'reference', 'editable')	
 				} else {
 					return _getPlaceHolder4Html(match, 'toParse', $1, 'nonEditable');
@@ -1921,7 +1919,7 @@
 //0125			text = text.replace(/(^|\n)(\{\|[^\n]*?)(\n+)/gmi, function(match, $1, $2, $3) {
 			text = text.replace(/(^|\n)(\{\|[^\n]*?)(\n+)/i, function(match, $1, $2, $3) { //0125
 				// $1 = start of page or new line before table defiunition
-				// $2 = the first line of the table defintion 
+				// $2 = the first line of the table definition 
 				// $3 = the empty new lines immediately following the table definition
 				var tableStart;
 
@@ -4117,8 +4115,7 @@
 
 		// if the content left over from browser back event
 		if ( e.content.match(/^<div class="tinywrapper">/)
-			|| e.content.match(/^<p class="mwt-notParagraph">/)
-			|| e.content.match(/.*class=('|")[^\1]*mwt-[^\1]*?\1/) ) {
+			|| e.content.match(/\sclass=('|")[^\1]*?mwt-[^\1]/) ) {
 			e.convert2html = false;
 		}
 
@@ -4266,7 +4263,8 @@
 	 * @param {tinymce.ContentEvent} e
 	 */
 	function _onGetContent(e) {
-		var text = e.content;
+		var text = e.content,
+			isInTemplate;
 		
 		debug( editor, "anteOnGetContent", _mwtDebugFlags.anteOnGetContent, text );
 
@@ -4485,7 +4483,8 @@
 	 * @param {tinymce.DblclickEvent} e
 	 */
 	function _onDblClick(evt) {
-		var selectedNode=evt.target,
+		var editor = tinymce.activeEditor,
+			selectedNode=evt.target,
 			classList,
 			targetFound = false;
 
@@ -4524,7 +4523,7 @@
 
 		function executeDbleClick( aNode ) {
 			var classList = [];
-				
+
 			// exit if nothing selected
 			if ( aNode == null ) return ;
 			
@@ -4684,16 +4683,22 @@
 			// content results in an empty paragraph being added
 			var cursorLocation = getCursorOffset();
 
-			//if previous node is not null, carry on 
-			if ( cursorLocation.previousNode != null ) return;
+			//if not at start of editor content carry on 
+			if ( cursorLocation.cursor != 0 ) return;
 
+			//if previous node is not null, select and carry on 
 			_cursorOnDown = cursorLocation.cursor;
 			_cursorOnDownPreviousNode = cursorLocation.previousNode;
-			if (( _cursorOnDown == 0) && ( _cursorOnDownPreviousNode == null ))  {
+			if ( _cursorOnDownPreviousNode == null )  {
 				// we are already at start of text
 				var el = editor.dom.create( 'p', { 'class' : 'mwt-notParagraph' }, '<br class="mwt-emptyline">' );
 				editor.getBody().insertBefore(el, editor.getBody().firstChild);
 				editor.selection.setCursorLocation();
+				evt.preventDefault();
+				evt.stopImmediatePropagation();
+				evt.stopPropagation();
+			} else {
+				editor.selection.select( _cursorOnDownPreviousNode );
 				evt.preventDefault();
 				evt.stopImmediatePropagation();
 				evt.stopPropagation();
@@ -4719,6 +4724,7 @@
 					var el = editor.dom.create( 'p', { 'class' : 'mwt-paragraph' }, '<br class="mwt-emptyline">' );
 					$(el).insertAfter(editor.getBody().lastChild);;
 					editor.selection.select( el );
+            				editor.selection.scrollIntoView();
 					editor.selection.collapse();
 					evt.preventDefault();
 					evt.stopImmediatePropagation();
@@ -4801,7 +4807,15 @@ function wikiparser( editor ) {
 				isInTemplate = true;
 			}
 		});
-		
+
+		// Elements of id pf_free_text are in page forms templates
+		// but not assigned to the template class so we put this
+		// here as a failsafe - must check with Yaron if a change
+		// is also needed in PF?
+		if ( editor.targetElm.id == 'pf_free_text' ) {
+			isInTemplate = true;
+		}
+
 		_pipeText = isInTemplate ? '{{!}}' : '|';
 		
 		// stash common placeholders
@@ -4911,11 +4925,10 @@ function wikiparser( editor ) {
 	//
 	// setup minimising menubar when field not selected in pageforms
 	//
-	var minimizeOnBlur = $(editor.getElement()).hasClass( 'mceMinimizeOnBlur' );
+/*	var minimizeOnBlur = $(editor.getElement()).hasClass( 'mceMinimizeOnBlur' );
 		if ( minimizeOnBlur ) {
 			editor.on('focus', function(e) {
 //0207			tinyMCE.activeEditor.on('focus', function(e) {
-debugger;
 //0207				var mcePane = $("textarea#" + e.target.id).prev();
 				var mcePane = $("textarea#" + e.target.id).css( "background-color", "red" );
 				mcePane.find(".tox-toolbar__primary").css("height", "");
@@ -4924,14 +4937,14 @@ debugger;
 			});
 			editor.on('blur', function(e) {
 //0207			tinyMCE.activeEditor.on('blur', function(e) {
-debugger;
+
 //0207				var mcePane = $("textarea#" + e.target.id).prev();
 				var mcePane = $("textarea#" + e.target.id).css( "background-color", "green" );
 				// Keep a little sliver of the toolbar so that users see it.
 				mcePane.find(".tox-toolbar__primary").css("height", "10px");
 				mcePane.find(".tox-toolbar__primary .tox-flow-layout").hide("medium");
 			});
-		}
+		}*/
 	};
 	this.getInfo = function() {
 		var info = {
