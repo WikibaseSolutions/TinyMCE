@@ -1024,7 +1024,7 @@
 			// and send it to be parsed, then split out the parsed code and replace it 
 			// within the text
 			if (parserTable.length > 0) {
-				// we need to wrap the seperator {@@@@} with two '\n's because
+				// we need to wrap the separator {@@@@} with two '\n's because
 				// of the way pre and pseudo pre tags are handled in the wiki parser
 
 				// add trailing separator in case last item parses as nothing
@@ -1919,7 +1919,7 @@
 //0125			text = text.replace(/(^|\n)(\{\|[^\n]*?)(\n+)/gmi, function(match, $1, $2, $3) {
 			text = text.replace(/(^|\n)(\{\|[^\n]*?)(\n+)/i, function(match, $1, $2, $3) { //0125
 				// $1 = start of page or new line before table defiunition
-				// $2 = the first line of the table defintion 
+				// $2 = the first line of the table definition 
 				// $3 = the empty new lines immediately following the table definition
 				var tableStart;
 
@@ -4683,16 +4683,22 @@
 			// content results in an empty paragraph being added
 			var cursorLocation = getCursorOffset();
 
-			//if previous node is not null, carry on 
-			if ( cursorLocation.previousNode != null ) return;
+			//if not at start of editor content carry on 
+			if ( cursorLocation.cursor != 0 ) return;
 
+			//if previous node is not null, select and carry on 
 			_cursorOnDown = cursorLocation.cursor;
 			_cursorOnDownPreviousNode = cursorLocation.previousNode;
-			if (( _cursorOnDown == 0) && ( _cursorOnDownPreviousNode == null ))  {
+			if ( _cursorOnDownPreviousNode == null )  {
 				// we are already at start of text
 				var el = editor.dom.create( 'p', { 'class' : 'mwt-notParagraph' }, '<br class="mwt-emptyline">' );
 				editor.getBody().insertBefore(el, editor.getBody().firstChild);
 				editor.selection.setCursorLocation();
+				evt.preventDefault();
+				evt.stopImmediatePropagation();
+				evt.stopPropagation();
+			} else {
+				editor.selection.select( _cursorOnDownPreviousNode );
 				evt.preventDefault();
 				evt.stopImmediatePropagation();
 				evt.stopPropagation();
@@ -4718,6 +4724,7 @@
 					var el = editor.dom.create( 'p', { 'class' : 'mwt-paragraph' }, '<br class="mwt-emptyline">' );
 					$(el).insertAfter(editor.getBody().lastChild);;
 					editor.selection.select( el );
+            				editor.selection.scrollIntoView();
 					editor.selection.collapse();
 					evt.preventDefault();
 					evt.stopImmediatePropagation();
