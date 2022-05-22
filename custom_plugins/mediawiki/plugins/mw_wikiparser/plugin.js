@@ -4449,10 +4449,9 @@
 		var text,
 			dom;
 
-
 		dom = $(e.node);
 		text = dom[0].innerHTML;
-		
+
 		// get rid of any empty spans - these result from drag drop
 		// operations where computed styles have been filtered out
 		dom.find( "span" ).replaceWith( function() {
@@ -4472,6 +4471,8 @@
 		} else {
 			_externalPaste( dom );
 		}
+
+		dom[0].innerHTML = dom[0].innerHTML.replace(/\<span\>\&nbsp\;\<\/span\>/ig, "&nbsp;");
 
 		text = dom[0].innerHTML;
 		debug( editor, "postOnPastePostProcess", _mwtDebugFlags.postOnPastePreProcess, text );
@@ -4677,7 +4678,7 @@
 				nextNode: nextNode
 			}
 		} 
-	
+
 		if ( evt.keyCode == 38 ) {
 			// up-arrow or down arrow at start or end of editor
 			// content results in an empty paragraph being added
