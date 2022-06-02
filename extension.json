@@ -1,11 +1,12 @@
 {
-	"name": "TinyMCE",
-	"version": "1.1.2-ws-2.1",
+	"name": "TinyMCE (RvS build)",
+	"version": "1.1.2 (rel-2.10)",
 	"author": [
 		"Ephox",
 		"Hallo Welt",
 		"Duncan Crane",
-		"Yaron Koren"
+		"Yaron Koren",
+		"Wikibase Solutions"
 	],
 	"url": "https://www.mediawiki.org/wiki/Extension:TinyMCE",
 	"descriptionmsg": "tinymce-desc",
