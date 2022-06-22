@@ -678,6 +678,23 @@ var Ws_Link = function(editor) {
         return text;
     }
 
+
+    /**
+     * Event handler for "onChange"
+     * @param {tinymce.ContentEvent} e
+     */
+    function _onChange( e ) {
+        if ( typeof window.alreadydone === "undefined" ) {
+            //e.content = _sanitize( e.content, false );
+            window.alreadydone = true;
+            window.addEventListener('beforeunload', (event) => {
+                event.preventDefault();
+                // Google Chrome requires returnValue to be set.
+                event.returnValue = '';
+            });
+        }
+    }
+
     /**
      * Event handler for "beforeSetContent"
      * This is used to process the wiki code into html.
@@ -1066,8 +1083,9 @@ var Ws_Link = function(editor) {
             '</span>' : null;
         ed.on('beforeSetContent', _onBeforeSetContent);
         ed.on('dblclick', _onDblclick);
-
+        ed.on('change', _onChange);
         ed.addCommand('mceWsLink', showWsLinkDialog);
+
     }
 
     $(document).on('TinyMCEBeforeWikiToHtml', _onBeforeWiki2Html);

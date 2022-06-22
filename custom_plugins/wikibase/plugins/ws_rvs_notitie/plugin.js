@@ -208,7 +208,6 @@ var WsRvsNotitie = function(editor) {
     }
 
     this.init = function (ed) {
-        console.log('init ws_rvs_notitie');
         ed.on('NodeChange', onNodeChange);
         ed.on('NewBlock', onNewBlock);
     };
