@@ -20,6 +20,12 @@ var
      */
     _wsTags4Wiki = {};
 
+    function setUnloadWarning( e ) {
+        e.preventDefault();
+        // Google Chrome requires returnValue to be set.
+        e.returnValue = '';
+    }
+
 var Ws_Link = function(editor) {
     "use strict";
     var
@@ -679,6 +685,14 @@ var Ws_Link = function(editor) {
     }
 
 
+    function _onSubmit( e ) {
+        if ( typeof window.alreadydone !== "undefined" ) {
+            //e.content = _sanitize( e.content, false );
+            window.removeEventListener( 'beforeunload', setUnloadWarning );
+        }
+    }
+
+
     /**
      * Event handler for "onChange"
      * @param {tinymce.ContentEvent} e
@@ -687,11 +701,15 @@ var Ws_Link = function(editor) {
         if ( typeof window.alreadydone === "undefined" ) {
             //e.content = _sanitize( e.content, false );
             window.alreadydone = true;
+            window.addEventListener( 'beforeunload', setUnloadWarning );
+            /*
             window.addEventListener('beforeunload', (event) => {
                 event.preventDefault();
                 // Google Chrome requires returnValue to be set.
                 event.returnValue = '';
             });
+
+             */
         }
     }
 
@@ -1084,6 +1102,7 @@ var Ws_Link = function(editor) {
         ed.on('beforeSetContent', _onBeforeSetContent);
         ed.on('dblclick', _onDblclick);
         ed.on('change', _onChange);
+        ed.on('submit', _onSubmit);
         ed.addCommand('mceWsLink', showWsLinkDialog);
 
     }
