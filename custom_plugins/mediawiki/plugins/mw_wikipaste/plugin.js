@@ -747,36 +747,6 @@
           nodes[i].remove();
         }
       });
-      domParser.addNodeFilter('a', function (nodes) {
-        var i = nodes.length, node, href, name;
-        while (i--) {
-          node = nodes[i];
-          href = node.attr('href');
-          name = node.attr('name');
-          if (href && href.indexOf('#_msocom_') !== -1) {
-            node.remove();
-            continue;
-          }
-          if (href && href.indexOf('file://') === 0) {
-            href = href.split('#')[1];
-            if (href) {
-              href = '#' + href;
-            }
-          }
-          if (!href && !name) {
-            node.unwrap();
-          } else {
-            if (name && !/^_?(?:toc|edn|ftn)/i.test(name)) {
-              node.unwrap();
-              continue;
-            }
-            node.attr({
-              href: href,
-              name: name
-            });
-          }
-        }
-      });
       var rootNode = domParser.parse(content);
       if (shouldConvertWordFakeLists(editor)) {
         convertFakeListsToProperLists(rootNode);
