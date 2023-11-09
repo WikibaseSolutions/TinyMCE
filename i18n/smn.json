@@ -1,8 +1,12 @@
 {
 	"@metadata": {
 		"authors": [
-			"Seipinne"
+			"Seipinne",
+			"Yupik"
 		]
 	},
-	"tinymce-ok": "OK"
+	"tinymce-upload-caption": "Kovetekstâ",
+	"tinymce-link-link-remove-button-tooltip": "Meddâlist liiŋkâ",
+	"tinymce-ok": "OK",
+	"tinymce-cancel": "Jooskâ"
 }
