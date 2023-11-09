@@ -3,7 +3,8 @@
 		"authors": [
 			"Mainframe98",
 			"McDutchie",
-			"Romaine"
+			"Romaine",
+			"Wikibase Solutions"
 		]
 	},
 	"tinymce-editsource": "Brontekst bewerken",
@@ -59,6 +60,6 @@
 	"tinymce-link": "Koppeling",
 	"tinymce-yes": "Ja",
 	"tinymce-no": "Nee",
-	"tinymce-ok": "OK",
+	"tinymce-ok": "Akkoord",
 	"tinymce-cancel": "Annuleren"
 }

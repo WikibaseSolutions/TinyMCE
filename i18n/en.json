@@ -2,10 +2,11 @@
 	"@metadata": {
 		"authors": [
 			"Duncan Crane",
-			"Yaron Koren"
+			"Yaron Koren",
+			"Wikibase Solutions"
 		]
 	},
-	"tinymce-desc": "The TinyMCE WYSIWYG editor",
+	"tinymce-desc": "The TinyMCE WYSIWYG editor, RvS edit",
 	"tinymce-editsource": "Edit source",
 	"tinymce-editsectionsource": "edit source",
 	"tinymce-editcomment": "Comment, double click to edit",
