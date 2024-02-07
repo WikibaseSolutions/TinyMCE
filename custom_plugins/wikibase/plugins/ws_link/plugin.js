@@ -179,7 +179,7 @@ var Ws_Link = function(editor) {
 
         api.parse(templateCall, {}).done(function(data) {
             var content = getPreviewContent(data);
-            $(content).find('script[src*="WSForm.general.js"]').remove();
+            $(content).find('script[src*="FlexForm.general.js"]').remove();
             var bodyItems = [
                 {
                     label: iframeName,
@@ -198,7 +198,7 @@ var Ws_Link = function(editor) {
 
             // make sure that the select2 library is implemented, and rendered
             // attachTokens();
-            $(`iframe[title="${iframeName}"]`).load(async function () {
+            $(`iframe[title="${iframeName}"]`).on( 'load', async function () {
                 var iframe = $(`iframe[title="${iframeName}"]`);
                 $(iframe).css({
                     'min-height': '400px',
@@ -437,7 +437,7 @@ var Ws_Link = function(editor) {
      */
     function setUpTokenFunction(iframe) {
         if ( typeof $.fn.select2 !== 'function' ) {
-            $.getScript('/extensions/WSForm/select2.min.js').done(function() {
+            $.getScript('/extensions/FlexForm/Modules/select2.min.js').done(function() {
                 attachTokensIframe(iframe);
             });
         } else {
@@ -471,6 +471,7 @@ var Ws_Link = function(editor) {
      * @returns {string}
      */
     function getScripts() {
+        console.log( "getScripts" );
         return `
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/js/bootstrap.js"></script>
