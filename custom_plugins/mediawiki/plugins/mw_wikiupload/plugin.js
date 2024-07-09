@@ -262,11 +262,11 @@ var wikiupload = function (editor) {
 					tooltip: translate("tinymce-upload-format-tooltip"),
 					items :
 						[
+							{ text: translate("tinymce-upload-format-none-text"), value: '' },
 							{ text: translate("tinymce-upload-format-thumb-text"), value: 'thumb' },
 							{ text: translate("tinymce-upload-format-border-text"), value: 'border' },
 							{ text: translate("tinymce-upload-format-frame-text"), value: 'frame' },
-							{ text: translate("tinymce-upload-format-frameless-text"), value: 'frameless'},
-							{ text: translate("tinymce-upload-format-none-text"), value: '' }
+							{ text: translate("tinymce-upload-format-frameless-text"), value: 'frameless'}
 						]
 				},
 				fileDialogItems = [
@@ -438,7 +438,7 @@ var wikiupload = function (editor) {
 				if (!submittedData.horizontalalignment) submittedData.horizontalalignment = '';
 //				if (!submittedData.verticalalignment) submittedData.verticalalignment = 'middle';
 				if (!submittedData.verticalalignment) submittedData.verticalalignment = '';
-				if (!submittedData.format) submittedData.format = 'thumb';
+				if (!submittedData.format) submittedData.format = '';
 				if (!submittedData.overwriteFile) submittedData.overwriteFile = '';
 				return submittedData;
 			}
@@ -635,7 +635,7 @@ var wikiupload = function (editor) {
 				
 				if ( _imageFileExtensions.indexOf( extension) > -1 ) {
 					// add additional image attributes if image file
-					if ( dialogData.dimensions.width <= 0) {
+					if ( dialogData.dimensions.width <= 0 && dialogData.dimensions.width != '') {
 						dialogData.dimensions.width = _userThumbsize;
 					}
 					if (dialogData.dimensions.width > 0) {
@@ -910,7 +910,7 @@ var wikiupload = function (editor) {
 				if (!dialogData.horizontalalignment) dialogData.horizontalalignment = '';
 //				if (!dialogData.verticalalignment) dialogData.verticalalignment = 'middle';
 				if (!dialogData.verticalalignment) dialogData.verticalalignment = '';
-				if (!dialogData.format) dialogData.format = 'thumb';
+				if (!dialogData.format) dialogData.format = '';
 				if (!dialogData.overwriteFile) dialogData.overwriteFile = '';
 				return dialogData;
 			}
