@@ -409,7 +409,7 @@
 			},
 			content_css:
 				[
-					mw_scriptPath + mw_skin_css,
+//					mw_scriptPath + mw_skin_css,
 //					mw_scriptPath + mw_shared_css,
 					mw_extensionAssetsPath + '/TinyMCE/MW_tinymce.css',
 					mw_extensionAssetsPath + '/SyntaxHighlight_GeSHi/modules/pygments.wrapper.css',
