@@ -852,8 +852,8 @@
         var escapedText = escapeSearchText(text, wholeWord);
 
         var allowedLinksFormats = [
-            // <1 letter><2 digits>.<2 digits>.<4 digits>
-            '([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4}\\b)',
+            // <1 letter><2 digits>.<2 digits>.<4-5 digits>
+            '([A-Z][0-9]{2}.[0-9]{2}.[0-9]{4,5}\\b)',
 
             // <9 digits>/<1 digit>(/<1 letter><1 digit> could be more times)
             '([0-9]{9}\\/[0-9](\\/[a-z][0-9])+\\b)',
@@ -868,7 +868,10 @@
             '(G[0-9]{8}\\b)',
 
             // ECLI:NL:<1-5 digits>:<4 digits>:<1-8 digits/letters>
-            '(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{1,8})'
+            '(ECLI:NL:[a-z]{1,5}:[0-9]{4}:[a-z0-9]{1,8})',
+
+            // BRS.<2 digits>.<6 digits>
+            '(BRS\\.\\d{2}\\.\\d{6}\\b)'
         ];
 
         var pattern = {
@@ -1252,4 +1255,3 @@
     //
     // tinymce.PluginManager.add('wsrecoglink', Ws_Recog_Link);
 }(window));
-
