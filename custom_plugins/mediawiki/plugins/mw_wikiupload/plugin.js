@@ -836,16 +836,16 @@ var wikiupload = function (editor) {
 					ignoreWarnings = true,
 					uploadDetails,
 					result;
-					
+				
 				dialogData.type = 'File';
-				fileContent = _srccontent;
-				fileType = dialogData.type;
-				fileName = dialogData.dest.split('/').pop().split('#')[0].split('?')[0].split('!')[0].replace(/\s/gmi,'_');
-				fileSummary = dialogData.summary;
+				var fileContent = _srccontent;
+				var fileType = dialogData.type;
+				var fileName = dialogData.dest.split('/').pop().split('#')[0].split('?')[0].split('!')[0].replace(/\s/gmi,'_');
+				var fileSummary = dialogData.summary;
 				uploadDetails = doUpload(fileType, fileContent, fileName, fileSummary, ignoreWarnings);
 				result = checkUploadDetail( editor, uploadDetails, ignoreWarnings, fileName );
 				if (result[ "state" ] != "error" ) {
-					uploadPage = _mwtFileNamespace + ":" + fileName;
+					var uploadPage = _mwtFileNamespace + ":" + fileName;
 					insertUpload( uploadPage, dialogData );
 				}
 
