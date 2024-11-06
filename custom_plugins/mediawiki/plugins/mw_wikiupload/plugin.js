@@ -633,7 +633,7 @@ var wikiupload = function (editor) {
 				//set up wiki text for inserting or updating in editor window
 				wikitext += "[[" + uploadPage;
 				
-				if ( _imageFileExtensions.indexOf( extension) > -1 ) {
+				if ( _imageFileExtensions.indexOf( extension.toLowerCase() ) > -1 ) {
 					// add additional image attributes if image file
 					if ( dialogData.dimensions.width <= 0 && dialogData.dimensions.width != '') {
 						dialogData.dimensions.width = _userThumbsize;
@@ -841,7 +841,6 @@ var wikiupload = function (editor) {
 				fileContent = _srccontent;
 				fileType = dialogData.type;
 				fileName = dialogData.dest.split('/').pop().split('#')[0].split('?')[0].split('!')[0].replace(/\s/gmi,'_');
-				fileName = fileName.replace(/\.[^.]+$/, (ext) => ext.toLowerCase());
 				fileSummary = dialogData.summary;
 				uploadDetails = doUpload(fileType, fileContent, fileName, fileSummary, ignoreWarnings);
 				result = checkUploadDetail( editor, uploadDetails, ignoreWarnings, fileName );
@@ -1203,9 +1202,6 @@ var wikiupload = function (editor) {
 						fileSummary = dialogData.summary;
 						if ((fileContent) && (fileName)) {
 							do {
-								console.log("filename: " + fileName)
-								var fileNameLower = fileName.replace(/\.[^.]+$/, (ext) => ext.toLowerCase());
-								console.log("filename lowercase: " + fileNameLower)
 								uploadDetails = doUpload(fileType, fileContent, fileName, fileSummary, ignoreWarnings);
 								result = checkUploadDetail( editor, uploadDetails, ignoreWarnings, fileName );
 								if (( result[ "state" ] == 'ok') || ( result[ "state" ] == 'duplicate')) {
@@ -1215,8 +1211,8 @@ var wikiupload = function (editor) {
 								} else if ( result[ "state" ] == 'exists') {
 									dialogData.type = 'Wiki';
 									dialogData.wikiSrc = dialogData.displaySrc;
-									// dialogData.overwriteFile = '<img src="' + destinationFileDetails + '" style="margin-left:auto; margin-right:auto; display:block; vertical-align:middle;	height:135px;">';
-									// 	api.redial( makeDialog( overwriteDialogBody, dialogData ));
+//									dialogData.overwriteFile = '<img src="' + destinationFileDetails + '" style="margin-left:auto; margin-right:auto; display:block; vertical-align:middle;	height:135px;">';
+//										api.redial( makeDialog( overwriteDialogBody, dialogData ));
 //									} else {
 										api.redial( makeDialog( newImageDialogBody( displayDialogItems ), dialogData ));
 //									}
@@ -1234,7 +1230,7 @@ var wikiupload = function (editor) {
 						}
 					} else if ((dialogData.type == 'Wiki') || (dialogData.type == '')) {
 						fileName = dialogData.dest;
-						uploadPage = _mwtFileNamespace + ":" + fileName.replace(/\.[^.]+$/, (ext) => ext.toLowerCase());
+						uploadPage = _mwtFileNamespace + ":" + fileName;
 					}
 				}
 
