@@ -99,7 +99,7 @@
      */
     var createLinkTemplate = function(id) {
         var adviceLinksFormat = [
-            '(W[0-9]{2}.[0-9]{2}.[0-9]{4}\\b)'
+            '(W[0-9]{2}.[0-9]{2}.[0-9]{4,5}\\b)'
         ];
 
         if ( new RegExp(adviceLinksFormat.join('|', 'gi')).test(id) ) {
