@@ -23,6 +23,15 @@ class TinyMCEHooks {
 
 		$GLOBALS['wgTinyMCEIP'] = dirname( __DIR__ ) . '/../';
 		$GLOBALS['wgTinyMCEUse'] = null;
+
+		// We have to have this hook called here, instead of in
+		// extension.json, because it's conditional.
+		if ( class_exists( 'MediaWiki\Linker\LinkRenderer' ) ) {
+			// MW 1.28+
+			$GLOBALS['wgHooks']['HtmlPageLinkRendererEnd'][] = 'TinyMCEHooks::changeRedLink';
+		} else {
+			$GLOBALS['wgHooks']['LinkEnd'][] = 'TinyMCEHooks::changeRedLinkOld';
+		}
 	}
 
 	/**

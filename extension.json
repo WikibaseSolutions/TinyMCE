@@ -1,11 +1,12 @@
 {
 	"name": "TinyMCE",
-	"version": "1.1.2",
+	"version": "1.1.2 (2.15.0)",
 	"author": [
 		"Ephox",
 		"Hallo Welt",
 		"Duncan Crane",
-		"Yaron Koren"
+		"Yaron Koren",
+		"Wikibase Solutions"
 	],
 	"url": "https://www.mediawiki.org/wiki/Extension:TinyMCE",
 	"descriptionmsg": "tinymce-desc",
@@ -144,6 +145,7 @@
 				"tinymce-link-link-button-tooltip",
 				"tinymce-link-link-remove-button-tooltip",
 				"tinymce-link-open-link",
+				"tinymce-link-context-menu",
 				"tinymce-link",
 				"tinymce-insert-linebreak",
 				"tinymce-toggle-button-toggle-wiki-placeholders",
